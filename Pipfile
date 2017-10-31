@@ -13,6 +13,8 @@ name = "pypi"
 
 gunicorn = "*"
 flask = "*"
+scipy = "*"
+numpy = "*"
 
 
 [requires]
