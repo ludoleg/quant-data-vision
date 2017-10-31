@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h3>Phase Profile</h3>
+  <h3>Active Mode: {{ mode.title }}</h3>
+</div>
+<form action="/phase"
+      method="POST"
+      enctype="multipart/form-data"
+      onsubmit="selectAllOptions();">
+  <div class="container">
+    <div class="row">
+    <div class="col-xs-3">
+<h2><span class="label label-default form-control">Available Phases</span></h2>
+    </div>
+    <div class="col-xs-3">
+    </div>
+    <div class="col-xs-3">
+<h2><span class="label label-default">Selected Phases</span></h2>
+    </div>
+    </div>
+  <div class="row">
+    <div class="col-xs-3">
+      <select name="availablephase" id="leftValues" multiple="multiple" class="form-control" size="20">
+              {% for item in availablephaselist %}
+                <option  value="{{ item }}">{{ item }}</option>
+             {% endfor %}
+      </select>
+    </div>
+    <div class="col-xs-3" class="form-control">
+      <input type="button" id="btnLeft" value="&lt;&lt;" />
+      <input type="button" id="btnRight" value="&gt;&gt;" />
+    </div>
+    <div class="col-xs-3">
+      <select name="selectedphase" id="rightValues" multiple="multiple" class="form-control" size="20" required>
+	{% if (selectedphaselist is defined) and selectedphaselist %}
+        {% for item in selectedphaselist %}
+        <option  value="{{ item }}">{{ item }}</option>
+        {% endfor %}
+	{% endif %}
+      </select>
+  </div>
+  </div>
+  </div>
+  <hr>
+  <div class="row">
+    <div class="col-xs-3">
+      <button type="submit" class="btn btn-primary">Save Phase Profile</button>
+    </div>
+    </div>
+</form>
+<script>
+<!-- var $select = $("#rightValues"); -->
+
+<!-- if($select == null) -->
+<!-- { -->
+<!-- $.getJSON("/phaselist.json", function(data){ -->
+<!-- 	$select.html(''); -->
+<!-- 	var listitems; -->
+<!-- 	$.each(data, function(key, value){ -->
+<!-- 		listitems += '<option value=' + key + '>' + key + '</option>'; -->
+<!-- 	}); -->
+<!-- 	$select.append(listitems); -->
+<!-- }); -->
+<!-- } -->
+
+$("#btnLeft").click(function () {
+    var selectedItem = $("#rightValues option:selected");
+    $("#leftValues").append(selectedItem);
+});
+
+$("#btnRight").click(function () {
+    var selectedItem = $("#leftValues option:selected");
+    $("#rightValues").append(selectedItem);
+});
+
+$("#rightValues").change(function () {
+    var selectedItem = $("#rightValues option:selected");
+    $("#txtRight").val(selectedItem.text());
+});
+
+function selectAllOptions()
+{
+  var selObj = document.getElementById('rightValues');
+  for (var i=0; i<selObj.options.length; i++) {
+    selObj.options[i].selected = true;
+  }
+  var selObj = document.getElementById('leftValues');
+  for (var i=0; i<selObj.options.length; i++) {
+    selObj.options[i].selected = true;
+  }
+}
+
+</script>
+{% endblock %}
+

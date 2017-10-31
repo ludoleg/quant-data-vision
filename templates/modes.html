@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Modes{% endblock %}
+{% block content %}
+            <div class="page-header">
+                <h3>Analysis Modes</h3>
+            </div>
+            <form id="mode-list" class="form-horizontal" role="form" method="post" action="/modes">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Modes
+                    </div>
+                    <div class="panel-body">
+                        <a href="/modes/create" class="btn btn-success">Create</a>
+                        <input type="submit" class="btn btn-danger" name="delete" value="Delete">
+                        <table class="table table-hover ">
+                            <thead>
+                                <tr>
+                                    <th class="col-lg-1"></th>
+				    <th class="col-lg-2">Name</th>
+				    <th class="col-lg-2">Description</th>
+				    <th class="col-lg-1">Target</th>
+                                    <th class="col-lg-1">Lambda</th>
+                                    <th class="col-lg-1">FWHMA</th>
+                                    <th class="col-lg-1">FWHMB</th>
+                                    <th class="col-lg-2">Inventory</th>
+                                    <th class="col-lg-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for mode in modes %}
+                                <tr>
+                                    <td><input type="checkbox" name="mode_id" value="{{ mode.key.id() }}"></td>
+                                    <td>{{ mode.title }}</td>
+                                    <td>{{ mode.description }}</td>
+                                    <td>{{ mode.qtarget }}</td>
+                                    <td>{{ mode.qlambda }}</td>
+                                    <td>{{ mode.fwhma }}</td>
+                                    <td>{{ mode.fwhmb }}</td>
+                                    <td>{{ mode.inventory }}</td>
+                                    <!-- get numeric ID of entity key -->
+                                    <td><a href="/modes/edit?id={{ mode.key.id() }}">Edit</a></td>
+                                </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="9">No Mode Found</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </form>
+{% endblock %}

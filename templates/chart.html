@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}QAnalyze - XRD pattern chart{% endblock %}
+{% block content %}
+<div id="xrdplot" style="width:1200px;height:400px;"></div>
+<div class="container">
+  <div class="row">
+    <div class="col-lg-3">
+<h4>Mode: {{ mode }}</h4>
+<h4>Database: {{ mode }}</h4>
+    </div>
+    <div class="col-lg-6">
+      <table class="table table-bordered table-condensed" style="width: auto;">
+	<tr>
+	  <th bgcolor="#DDDDDD">Phase</th>
+	  <th bgcolor="#DDDDDD">AMCSD Code #</th> 
+	  <th bgcolor="#DDDDDD">Mass %</th> 
+	</tr>
+	{%- for row in phaselist %}
+	<tr>
+	  {%- for column in row %}
+	  <td class="col-md-3">{{ column }}</td>
+	  {%- endfor %}
+	</tr>
+	{%- endfor %}
+      </table>
+    </div>
+    <div class="col-lg-3">
+      <div id="csvbutton" >
+	<a href="/csvDownload?key={{ url_text }}" type="button" class="btn btn-xs btn-primary">Download CSV</button></a>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+    var list = {{ phaselist| safe }};
+var phases = '';
+for (var i = 0; i < list.length; i++) {
+    phases += list[i][0];
+    phases += ": ";
+    phases += list[i][2];
+    phases += "%<br>";
+}
+
+var trace1 = {
+    x: {{ angle }},
+    y: {{ diff }},
+    mode: 'lines',
+    line: {
+	color: 'rgb(128, 0, 0)',
+	width: 1
+		    },
+		    name: 'Data',
+		    hoverinfo: 'none'
+};
+
+var trace2 = {
+    x: {{ angle }},
+    y: {{ bgpoly }},
+    mode: 'lines',
+    line: {
+	width: 1
+    },
+		    name: 'Background',
+		    		    hoverinfo: 'none'
+};
+
+var trace3 = {
+    x: {{ angle }},
+    y: {{ sum }},
+    mode: 'lines',
+    line: {
+	width: 1
+    },
+		    name: 'Fit',
+		    		    hoverinfo: 'none'
+};
+
+var data = [trace1, trace2, trace3];
+
+var layout = {
+    annotations: [
+	{
+	    x: 0.99,
+	    y: 0.95,
+	    xref: "paper",
+	    yref: "paper",
+	    text: phases,
+	    showarrow: false,
+	    bgcolor: 'rgba(160, 236, 133, 0.7)',
+	    borderpad: 6,
+	    align: 'right'
+	}],
+    showlegend: true,
+    title: '{{ samplename }}',
+    xaxis: {
+	showgrid: true,
+	zeroline: true,
+	showline: true,
+	title: '2-theta (deg)',
+	gridwidth: 1,
+	zerolinecolor: '#969696',
+	zerolinewidth: 1,
+	linecolor: '#636363',
+	linewidth: 1,
+	mirror: 'ticks',
+	gridcolor: '#bdbdbd'
+    },
+    yaxis: {
+	title: 'Intensity',
+	showgrid: true,
+	zeroline: true,
+	gridwidth: 1,
+	showline: true,
+	zerolinecolor: '#969696',
+	zerolinewidth: 1,
+	linecolor: '#636363',
+	linewidth: 1,
+	mirror: 'ticks',
+	gridcolor: '#bdbdbd'
+    },
+};
+
+Plotly.plot(document.getElementById('xrdplot'), data, layout);
+</script>
+{% endblock %}
+

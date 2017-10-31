@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block body %}
+   <ul>
+    {% for min in phaselist %}
+    <li><{{ min }}</li>
+  {% endfor %}
+  </ul>
+  {% for min in phaselist %}
+   <div><p>{{ min }}</b></p></div>
+    {% endfor %}		   
+{% endblock %}
