@@ -23,7 +23,7 @@ import phaselist
 import StringIO
 import csv
 
-from flask import Flask, request, render_template, session, make_response
+from flask import Flask, request, render_template, session, make_response, redirect
 from werkzeug.utils import secure_filename
 
 #Application modules
@@ -89,6 +89,8 @@ def process():
         filename = uploaded_file.filename
         session['filename'] = filename
         session['dbname'] = 'difdata_CheMin.txt'
+        session['selected'] = phaselist.defaultPhases
+        session['available'] = phaselist.availablePhases
 
         if uploaded_file and allowed_file(uploaded_file.filename):
             # Make a valid version of filename for any file ystem
@@ -278,59 +280,33 @@ if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)
 # [END app]
 
+# [START phase setting]
+@app.route('/phase', methods=['GET', 'POST'])
+def phase():
+    if request.method == 'POST':
+        selectedlist = request.form.get('selectedphase')
+        availlist = request.form.get('availablephase')
+        print selectedlist
+        # selectedlist.sort()
+        # availlist.sort()
+        session['available'] = availlist
+        session['selected'] = selectedlist
+        return redirect('/process')
+    else:
+        # mode = QuantModeModel()
+        # print(mode, file=sys.stderr)
+        # session['mode'] = mode
+        # session['selected'] = phaselist.defaultPhases
+        print session['selected']
+        template_vars = {
+            'availablephaselist': session['available'],
+            'selectedphaselist': session['selected'],
+            'mode': session['dbname']
+        }
+        return render_template('phase.html', **template_vars)
 
-class handlePhase(webapp2.RequestHandler):
-    def get(self):
-        user = users.get_current_user()
-        if user:
-            user_id = users.get_current_user().user_id() 
-            session = SessionData.query(SessionData.user == user_id).get()
-            # Checks for Quant session
-            # If not, init a session
-            if not session:
-                session = SessionData(user=user_id,
-                                      email=user.nickname(),
-                )
-
-                session_key = session.put()
-                mode = QuantModeModel(parent=session_key)
-                mode_key = mode.put()
-                session.currentMode = mode_key
-                session.put()
-
-            # Get the current Mode
-            mode = session.currentMode.get()
-
-            logging.debug(mode.selected)
-            logging.debug(mode.available)
-                            
-            template = JINJA_ENVIRONMENT.get_template('phase.html')
-            template_vars = {
-                'availablephaselist': mode.available,
-                'selectedphaselist': mode.selected,
-                'mode': mode
-            }
-            self.response.out.write(template.render(template_vars))
-        else:
-            logging.info("No user -> need login")
-            self.redirect(users.create_login_url(self.request.url))
-    def post(self):
-        logging.debug("Post args: %s", self.request.arguments())
-        selectedlist = self.request.get_all('selectedphase')
-        availlist = self.request.get_all('availablephase')
-        logging.debug('Phaselist selected retrieved: %s', selectedlist)
-        # logging.debug('Phaselist available retrieved: %s', availlist)
-        user_id = users.get_current_user().user_id() 
-        session = SessionData.query(SessionData.user == user_id).get()
-        mode = session.currentMode.get()
-        
-        selectedlist.sort()
-        availlist.sort()
-        
-        mode.selected = selectedlist
-        mode.available = availlist
-        mode.put()
-        # self.redirect('/plot')
-        self.redirect('/')
-        
+    #    return "Total computation  time = %.2fs" %(time.time()-t0)
+    #return_str = ''
+    #return_str += 'results: {}<br />'.format(str(results))
+    #return return_str
 

@@ -9,6 +9,7 @@
 *.kpf
 venv
 
+
 # Don't store secret keys in version control
 secret_keys.py
 =======
@@ -16,3 +17,5 @@ secret_keys.py
 
 # Ignore all emacs backup files
 *~
+
+uploads
