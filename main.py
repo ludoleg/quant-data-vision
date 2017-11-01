@@ -59,15 +59,18 @@ def odr_demo():
 # [START process]
 @app.route('/process', methods=['POST'])
 def process():
-    uploaded_file = request.files.get('file')
-    if not uploaded_file:
-        return 'No file uploaded.', 400
+    if request.method == 'POST':
+        uploaded_file = request.files.get('file')
+        if not uploaded_file:
+            return 'No file uploaded.', 400
 
-    # Load the sample data file in userData
-    # parse sample data file wrt format
-
-    filename = uploaded_file.filename
-    XRDdata = uploaded_file
+        # Load the sample data file in userData
+        # parse sample data file wrt format
+        filename = uploaded_file.filename
+        session['filename'] = filename
+        XRDdata = uploaded_file
+        uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
     userData = qxrdtools.openXRD(XRDdata, filename)
     # print userData
     DBname ='difdata_CheMin.txt'
