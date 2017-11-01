@@ -47,6 +47,9 @@ app.config['DEBUG'] = True
 
 @app.route('/')
 def hello():
+    session['dbname'] = 'difdata-rockforming.txt'
+    session['selected'] = phaselist.rockPhases
+    session['available'] = phaselist.availablePhases
     return render_template('index.html')
 
 @app.route('/about')
@@ -66,15 +69,23 @@ def process():
         if inventory == "cement":
             # phaselistname = 'difdata_cement_inventory.csv'
             session['dbname'] ='difdata_cement.txt'
+            session['selected'] = phaselist.cementPhases
+            session['available'] = phaselist.availablePhases
         elif inventory == "pigment":
             # phaselistname = 'difdata_pigment_inventory.csv'
             session['dbname'] ='difdata_pigment.txt'
+            session['selected'] = phaselist.pigmentPhases
+            session['available'] = phaselist.availablePhases
         elif inventory == "rockforming":
             # phaselistname = 'difdata-rockforming_inventory.csv'
             session['dbname'] ='difdata-rockforming.txt'
+            session['selected'] = phaselist.rockPhases
+            session['available'] = phaselist.availablePhases
         elif inventory == "chemin":
             # phaselistname = 'difdata_CheMin_inventory.csv'
             session['dbname'] ='difdata_CheMin.txt'
+            session['selected'] = phaselist.cheminPhases
+            session['available'] = phaselist.availablePhases
         else:
             logging.critical("Can't find inventory")
         print session['dbname']
@@ -88,9 +99,6 @@ def process():
         # parse sample data file wrt format
         filename = uploaded_file.filename
         session['filename'] = filename
-        session['dbname'] = 'difdata_CheMin.txt'
-        session['selected'] = phaselist.defaultPhases
-        session['available'] = phaselist.availablePhases
 
         if uploaded_file and allowed_file(uploaded_file.filename):
             # Make a valid version of filename for any file ystem
@@ -102,10 +110,14 @@ def process():
     filename = session['filename']
     DBname = session['dbname']
     XRDdata = open(os.path.join('uploads', filename), 'r')
-        
+    # Phase selection
+    selectedPhases = session['selected']
+    # selectedPhases = phaselist.defaultPhases
+    print selectedPhases
+    # print(selectedPhases, file=sys.stderr)
+
     userData = qxrdtools.openXRD(XRDdata, filename)
     # print userData
-    # DBname ='difdata_CheMin.txt'
     
     Lambda = 0.0
     Target = 'Co'
@@ -126,12 +138,6 @@ def process():
         
     InstrParams = {"Lambda": Lambda, "Target": Target, "FWHMa": FWHMa, "FWHMb": FWHMb}
 
-    # Phase selection
-    #    selectedPhases = session['selected']
-    selectedPhases = phaselist.defaultPhases
-    # print selectedPhases
-    # print(selectedPhases, file=sys.stderr)
-
     # Dif data captures all cristallographic data
     selectedphases = []
     for i in range (len(selectedPhases)):
@@ -139,8 +145,6 @@ def process():
         code = int(code)
         selectedphases.append((name,code))
 
-    # print selectedphases
-        
     # Load in the DB file
     difdata = open(DBname, 'r').readlines()
 
@@ -286,8 +290,8 @@ def phase():
     if request.method == 'POST':
         selectedlist = request.form.getlist('selectedphase')
         availlist = request.form.getlist('availablephase')
-        # selectedlist.sort()
-        # availlist.sort()
+        selectedlist.sort()
+        availlist.sort()
         session['available'] = availlist
         session['selected'] = selectedlist
         return redirect('/process')
