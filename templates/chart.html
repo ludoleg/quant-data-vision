@@ -5,8 +5,19 @@
 <div class="container">
   <div class="row">
     <div class="col-lg-3">
-<h4>Mode: {{ mode }}</h4>
-<h4>Database: {{ mode }}</h4>
+      <h4>Mode: {{ mode }}</h4>
+      <h4>Database: {{ mode }}</h4>
+      <div>
+        <table>
+          <tr>
+            <th>Database</th>
+          </tr>
+          <tr><td><a href="/process?dbinventory=rock">Rock</a></td></tr>
+          <tr><td><a href="/process?dbinventory=cement">Cement</a></td></tr>
+          <tr><td><a href="/process?dbinventory=pigment">Pigment</a></td></tr>
+          <tr><td><a href="/process?dbinventory=chemin">Chemin</a></td></tr>
+        </table>
+      </div>
     </div>
     <div class="col-lg-6">
       <table class="table table-bordered table-condensed" style="width: auto;">

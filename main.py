@@ -24,6 +24,7 @@ import StringIO
 import csv
 
 from flask import Flask, request, render_template, session, make_response
+from werkzeug.utils import secure_filename
 
 #Application modules
 import qxrd
@@ -35,7 +36,7 @@ UPLOAD_FOLDER = UPLOAD_DIR
 if not os.path.isdir(UPLOAD_DIR):
     os.mkdir(UPLOAD_DIR)
 
-ALLOWED_EXTENSIONS = set(['txt', 'plv'])
+ALLOWED_EXTENSIONS = set(['txt', 'plv', 'csv'])
 
     # [start config]
 app = Flask(__name__)
@@ -57,10 +58,29 @@ def odr_demo():
     return render_template('odr_demo.html')
 
 # [START process]
-@app.route('/process', methods=['POST'])
+@app.route('/process', methods=['GET','POST'])
 def process():
+    if request.method == 'GET':
+        inventory = request.args.get('dbinventory')
+        # Unpack the selected inventory
+        if inventory == "cement":
+            # phaselistname = 'difdata_cement_inventory.csv'
+            session['dbname'] ='difdata_cement.txt'
+        elif inventory == "pigment":
+            # phaselistname = 'difdata_pigment_inventory.csv'
+            session['dbname'] ='difdata_pigment.txt'
+        elif inventory == "rockforming":
+            # phaselistname = 'difdata-rockforming_inventory.csv'
+            session['dbname'] ='difdata-rockforming.txt'
+        elif inventory == "chemin":
+            # phaselistname = 'difdata_CheMin_inventory.csv'
+            session['dbname'] ='difdata_CheMin.txt'
+        else:
+            logging.critical("Can't find inventory")
+        print session['dbname']
+
     if request.method == 'POST':
-        uploaded_file = request.files.get('file')
+        uploaded_file = request.files['rockdatafile']
         if not uploaded_file:
             return 'No file uploaded.', 400
 
@@ -68,19 +88,29 @@ def process():
         # parse sample data file wrt format
         filename = uploaded_file.filename
         session['filename'] = filename
-        XRDdata = uploaded_file
-        uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        session['dbname'] = 'difdata_CheMin.txt'
+
+        if uploaded_file and allowed_file(uploaded_file.filename):
+            # Make a valid version of filename for any file ystem
+            filename = secure_filename(uploaded_file.filename)
+            uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'],
+                                   filename))
+
+    # Load parameters for computation
+    filename = session['filename']
+    DBname = session['dbname']
+    XRDdata = open(os.path.join('uploads', filename), 'r')
         
     userData = qxrdtools.openXRD(XRDdata, filename)
     # print userData
-    DBname ='difdata_CheMin.txt'
+    # DBname ='difdata_CheMin.txt'
     
     Lambda = 0.0
     Target = 'Co'
     FWHMa = 0.0
     FWHMb = 0.35
 
-    # Boundaries check
+        # Boundaries check
     if(Lambda > 2.2 or Lambda == 0):
         Lambda = ''
     if(FWHMa > 0.01):
@@ -91,7 +121,7 @@ def process():
         FWHMb = 1.0
     if(FWHMb < 0.01):
         FWHMb = 0.01    
-
+        
     InstrParams = {"Lambda": Lambda, "Target": Target, "FWHMa": FWHMa, "FWHMb": FWHMb}
 
     # Phase selection
@@ -129,8 +159,7 @@ def process():
     #calcdiff = calcdiff
     # csv = session_data_key.urlsafe()
     csv = 'ODR'
-    session['results'] = results
-    session['filename'] = filename
+    # session['results'] = results
     
     template_vars = {
         'phaselist': results,
@@ -141,7 +170,7 @@ def process():
         'url_text': csv,
         'key': 'ludo',
         'samplename': filename,
-        'mode': 'Chemin-ODR'
+        'mode': session['dbname']
     }
     return render_template('chart.html', **template_vars)
 # [END process]
@@ -220,6 +249,21 @@ def csvDownload():
     return output
 # [END CVS]
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# def compute_mean_std(filename=None):
+def compute_function(filename=None):
+    data = np.loadtxt(os.path.join('uploads', filename))
+    return """
+Data from file <tt>%s</tt>:
+<p>
+<table border=1>
+<tr><td> mean    </td><td> %.3g </td></tr>
+<tr><td> st.dev. </td><td> %.3g </td></tr>
+""" % (filename, np.mean(data), np.std(data))
+
 @app.errorhandler(500)
 def server_error(e):
     logging.exception('An error occurred during a request.')
@@ -234,4 +278,59 @@ if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)
 # [END app]
 
+
+class handlePhase(webapp2.RequestHandler):
+    def get(self):
+        user = users.get_current_user()
+        if user:
+            user_id = users.get_current_user().user_id() 
+            session = SessionData.query(SessionData.user == user_id).get()
+            # Checks for Quant session
+            # If not, init a session
+            if not session:
+                session = SessionData(user=user_id,
+                                      email=user.nickname(),
+                )
+
+                session_key = session.put()
+                mode = QuantModeModel(parent=session_key)
+                mode_key = mode.put()
+                session.currentMode = mode_key
+                session.put()
+
+            # Get the current Mode
+            mode = session.currentMode.get()
+
+            logging.debug(mode.selected)
+            logging.debug(mode.available)
+                            
+            template = JINJA_ENVIRONMENT.get_template('phase.html')
+            template_vars = {
+                'availablephaselist': mode.available,
+                'selectedphaselist': mode.selected,
+                'mode': mode
+            }
+            self.response.out.write(template.render(template_vars))
+        else:
+            logging.info("No user -> need login")
+            self.redirect(users.create_login_url(self.request.url))
+    def post(self):
+        logging.debug("Post args: %s", self.request.arguments())
+        selectedlist = self.request.get_all('selectedphase')
+        availlist = self.request.get_all('availablephase')
+        logging.debug('Phaselist selected retrieved: %s', selectedlist)
+        # logging.debug('Phaselist available retrieved: %s', availlist)
+        user_id = users.get_current_user().user_id() 
+        session = SessionData.query(SessionData.user == user_id).get()
+        mode = session.currentMode.get()
+        
+        selectedlist.sort()
+        availlist.sort()
+        
+        mode.selected = selectedlist
+        mode.available = availlist
+        mode.put()
+        # self.redirect('/plot')
+        self.redirect('/')
+        
 
