@@ -284,20 +284,21 @@ if __name__ == '__main__':
 @app.route('/phase', methods=['GET', 'POST'])
 def phase():
     if request.method == 'POST':
-        selectedlist = request.form.get('selectedphase')
-        availlist = request.form.get('availablephase')
-        print selectedlist
+        selectedlist = request.form.getlist('selectedphase')
+        availlist = request.form.getlist('availablephase')
         # selectedlist.sort()
         # availlist.sort()
         session['available'] = availlist
         session['selected'] = selectedlist
         return redirect('/process')
+        # result = request.form.get()
+        # return(str(selectedlist))
+        # return render_template("result.html",result = result)
     else:
         # mode = QuantModeModel()
         # print(mode, file=sys.stderr)
         # session['mode'] = mode
         # session['selected'] = phaselist.defaultPhases
-        print session['selected']
         template_vars = {
             'availablephaselist': session['available'],
             'selectedphaselist': session['selected'],
@@ -310,3 +311,13 @@ def phase():
     #return_str += 'results: {}<br />'.format(str(results))
     #return return_str
 
+@app.route('/ludo')
+def ludo():
+    return render_template(
+        'ludo.html',
+        data=[{'name':'red'}, {'name':'green'}, {'name':'blue'}])
+
+@app.route("/test" , methods=['GET', 'POST'])
+def test():
+    select = request.form.getlist('comp_select')
+    return(str(select)) # just to see what select is
