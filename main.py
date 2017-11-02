@@ -76,7 +76,7 @@ def process():
             session['dbname'] ='difdata_pigment.txt'
             session['selected'] = phaselist.pigmentPhases
             session['available'] = phaselist.availablePhases
-        elif inventory == "rockforming":
+        elif inventory == "rock":
             # phaselistname = 'difdata-rockforming_inventory.csv'
             session['dbname'] ='difdata-rockforming.txt'
             session['selected'] = phaselist.rockPhases
