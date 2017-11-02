@@ -23,7 +23,7 @@ import phaselist
 import StringIO
 import csv
 
-from flask import Flask, request, render_template, session, make_response, redirect
+from flask import Flask, request, render_template, session, make_response, redirect, flash
 from werkzeug.utils import secure_filename
 
 #Application modules
@@ -36,7 +36,7 @@ UPLOAD_FOLDER = UPLOAD_DIR
 if not os.path.isdir(UPLOAD_DIR):
     os.mkdir(UPLOAD_DIR)
 
-ALLOWED_EXTENSIONS = set(['txt', 'plv', 'csv'])
+ALLOWED_EXTENSIONS = set(['txt', 'plv', 'csv', 'mdi', 'dif'])
 
     # [start config]
 app = Flask(__name__)
@@ -105,6 +105,8 @@ def process():
             filename = secure_filename(uploaded_file.filename)
             uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'],
                                    filename))
+        else:
+            return 'File not supported', 400
 
     # Load parameters for computation
     filename = session['filename']
@@ -149,6 +151,7 @@ def process():
     difdata = open(DBname, 'r').readlines()
 
     results, BG, calcdiff = qxrd.Qanalyze(userData, difdata, selectedphases, InstrParams)
+    print results
 
     # print(twoT.tolist(), file=sys.stderr)
     # print(userData, file=sys.stderr)
@@ -241,6 +244,13 @@ def odr():
     else:
         return '''<html><body><h1>Did not get a post!</h1></body></html>'''
 # [END ODR service]
+
+
+# [START PHASE MANIP]
+@app.route('/phaseAnalysis', methods=['GET'])
+def phaseAnalysis():
+    select = request.form.get('key')
+    return select
 
 # [START CVS]
 @app.route('/csvDownload', methods=['GET'])
