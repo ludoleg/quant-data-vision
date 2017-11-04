@@ -23,7 +23,7 @@ import phaselist
 import StringIO
 import csv
 
-from flask import Flask, request, render_template, session, make_response, redirect, flash
+from flask import Flask, request, render_template, session, make_response, redirect
 from werkzeug.utils import secure_filename
 
 #Application modules
@@ -115,9 +115,8 @@ def process():
     # Phase selection
     selectedPhases = session['selected']
     # selectedPhases = phaselist.defaultPhases
-    print selectedPhases
+    # print selectedPhases
     # print(selectedPhases, file=sys.stderr)
-
     userData = qxrdtools.openXRD(XRDdata, filename)
     # print userData
     
@@ -151,8 +150,9 @@ def process():
     difdata = open(DBname, 'r').readlines()
 
     results, BG, calcdiff = qxrd.Qanalyze(userData, difdata, selectedphases, InstrParams)
-    print results
-
+    # print results
+    session['results'] = results
+    
     # print(twoT.tolist(), file=sys.stderr)
     # print(userData, file=sys.stderr)
 
@@ -246,10 +246,22 @@ def odr():
 
 
 # [START PHASE MANIP]
-@app.route('/phaseAnalysis', methods=['GET'])
+@app.route('/phaseAnalysis', methods=['GET', 'POST'])
 def phaseAnalysis():
-    select = request.form.get('key')
-    return select
+    # select = request.form.get('key')
+    # return select
+    results = session['results']
+    sel, ava = reformat(results)
+    session['selected'] = sel
+    session['available'] = ava
+    template_vars = {
+        'availablephaselist': session['available'],
+        'selectedphaselist': session['selected'],
+        'mode': session['dbname']
+    }
+    return render_template('selector.html', **template_vars)
+
+    # return render_template('selector.html')
 
 # [START CVS]
 @app.route('/csvDownload', methods=['GET'])
@@ -334,4 +346,39 @@ def ludo():
 def test():
     select = request.form.getlist('comp_select')
     return(str(select)) # just to see what select is
+
+def reformat(results):
+    selected = [a[0] for a in results]
+    available = []
+    db = session['selected']
+    
+    # print selected
+    # inventory = phaselist.rockPhasesj
+    # print inventory
+    inventory= [a.split('\t') for a in db]
+    name = [a[0] for a in inventory]
+    code = [a[1] for a in inventory]
+
+    # for i in range(0, len(phaselist.rockPhases)):
+    #     if selected[i] in phaselist.rockPhases[i]:
+    #         print "yes"
+    i = 0
+    while i < len(name):
+        if any(word in name[i] for word in selected):
+            print i, name[i]
+            del name[i], code[i]
+        i += 1
+    
+    for i in range(len(name)):
+        available.append(name[i]+'\t'+code[i])
+    
+    # selected = [name+code for a in name]
+    
+    #selected = [name[0]+'\t'+str(a[1]) for a in results]
+    #selected = [(name, code) for a in name]   
+    # print available
+    # print selected
+    selected = [a[0]+'\t'+str(a[1]) for a in results]
+    print selected, available
+    return selected, available
 
