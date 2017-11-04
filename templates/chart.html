@@ -7,11 +7,11 @@
     <div class="col-lg-3">
       <h4>Mode: {{ mode }}</h4>
       <h4>Database: {{ mode }}</h4>
-    <div class="col-lg-3">
-      <div id="phasebutton" >
-	<a href="/phaseAnalysis?key={{ phaselist }}" type="button" class="btn btn-xs btn-primary">Add/Remove phase</button></a>
+      <div>
+        <form class="grey-box" id="phasebutton" method="post">
+          <input type="submit" value="Add/Remove">
+        </form>
       </div>
-    </div>
       <div>
         <table>
           <tr>

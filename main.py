@@ -168,8 +168,7 @@ def process():
     #calcdiff = calcdiff
     # csv = session_data_key.urlsafe()
     csv = 'ODR'
-    # session['results'] = results
-    
+
     template_vars = {
         'phaselist': results,
         'angle': angle.tolist(),
@@ -335,3 +334,4 @@ def ludo():
 def test():
     select = request.form.getlist('comp_select')
     return(str(select)) # just to see what select is
+
