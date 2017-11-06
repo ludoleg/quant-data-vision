@@ -151,7 +151,10 @@ def process():
 
     results, BG, calcdiff = qxrd.Qanalyze(userData, difdata, selectedphases, InstrParams)
     # print results
-    session['results'] = results
+    # session['results'] = results
+    sel, ava = rebalance(results)
+    session['selected'] = sel
+    session['available'] = ava
     
     # print(twoT.tolist(), file=sys.stderr)
     # print(userData, file=sys.stderr)
@@ -178,7 +181,9 @@ def process():
         'url_text': csv,
         'key': 'ludo',
         'samplename': filename,
-        'mode': session['dbname']
+        'mode': session['dbname'],
+        'availablephaselist': session['available'],
+        'selectedphaselist': session['selected']
     }
     return render_template('chart.html', **template_vars)
 # [END process]
@@ -315,6 +320,10 @@ def phase():
         availlist.sort()
         session['available'] = availlist
         session['selected'] = selectedlist
+        # print '####### Inside Phase ####'
+        # print session['selected']
+        # print '####### Inside Phase ####'
+        # print session['available']
         return redirect('/process')
         # result = request.form.get()
         # return(str(selectedlist))
@@ -365,7 +374,7 @@ def reformat(results):
     i = 0
     while i < len(name):
         if any(word in name[i] for word in selected):
-            print i, name[i]
+            # print i, name[i]
             del name[i], code[i]
         i += 1
     
@@ -379,6 +388,44 @@ def reformat(results):
     # print available
     # print selected
     selected = [a[0]+'\t'+str(a[1]) for a in results]
-    print selected, available
+    # print selected, available
     return selected, available
 
+def cleanup(results):
+    selected = [a[0]+'\t'+str(a[1]) for a in results]
+    return selected
+
+def rebalance(results):
+    # Get the base list
+    if session['dbname'] == 'difdata_cement.txt':
+        db = phaselist.cementPhases
+    elif session['dbname'] == 'difdata_pigment.txt':
+        db = phaselist.pigmentPhases
+    elif session['dbname'] == 'difdata-rockforming.txt':
+        db = phaselist.rockPhases
+    elif session['dbname'] == 'difdata_CheMin.txt':
+        db = phaselist.cheminPhases
+        
+    available = []
+    selected = [a[0] for a in results]
+    inventory= [a.split('\t') for a in db]
+    name = [a[0] for a in inventory]
+    code = [a[1] for a in inventory]
+
+    # for i in range(0, len(phaselist.rockPhases)):
+    #     if selected[i] in phaselist.rockPhases[i]:
+    #         print "yes"
+    i = 0
+    while i < len(name):
+        if any(word in name[i] for word in selected):
+            # print i, name[i]
+            del name[i], code[i]
+        i += 1
+    
+    for i in range(len(name)):
+        available.append(name[i]+'\t'+code[i])
+        
+    selected = [a[0]+'\t'+str(a[1]) for a in results]
+    selected.sort()
+    available.sort()
+    return selected, available

@@ -51,17 +51,17 @@
   <div class="container">
     <div class="row">
     <div class="col-xs-3">
-<h2><span class="label label-default form-control">Available Phases</span></h2>
+<h2><span class="control-label col-xs-3 form-control">Available Phases</span></h2>
     </div>
     <div class="col-xs-3">
     </div>
     <div class="col-xs-3">
-<h2><span class="label label-default">Selected Phases</span></h2>
+<h2><span class="control-label col-xs-3 form-control">Selected Phases</span></h2>
     </div>
     </div>
   <div class="row">
     <div class="col-xs-3">
-      <select name="availablephase" id="leftValues" multiple="multiple" class="form-control" size="20">
+      <select name="availablephase" id="leftValues" multiple="multiple" class="form-control" size="10">
               {% for item in availablephaselist %}
                 <option  value="{{ item }}">{{ item }}</option>
              {% endfor %}
@@ -72,7 +72,7 @@
       <input type="button" id="btnRight" value="&gt;&gt;" />
     </div>
     <div class="col-xs-3">
-      <select name="selectedphase" id="rightValues" multiple="multiple" class="form-control" size="20" required>
+      <select name="selectedphase" id="rightValues" multiple="multiple" class="form-control" size="10" required>
 	{% if (selectedphaselist is defined) and selectedphaselist %}
         {% for item in selectedphaselist %}
         <option  value="{{ item }}">{{ item }}</option>
@@ -85,7 +85,7 @@
   <hr>
   <div class="row">
     <div class="col-xs-3">
-      <button type="submit" class="btn btn-primary">Save Phase Profile</button>
+      <button type="submit" class="btn btn-primary">Analyze</button>
     </div>
     </div>
 </form>
