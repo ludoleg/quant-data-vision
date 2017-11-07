@@ -2,6 +2,7 @@
 {% block title %}QAnalyze - XRD pattern chart{% endblock %}
 {% block content %}
 <div id="xrdplot" style="width:1200px;height:400px;"></div>
+<div id="sumplot" style="width:1200px;height:400px;"></div>
 <div class="container">
   <div class="row">
     <div class="col-lg-3">
@@ -169,7 +170,19 @@ var trace3 = {
 		    		    hoverinfo: 'none'
 };
 
+var trace4 = {
+    x: {{ angle }},
+    y: {{ difference }},
+    mode: 'lines',
+    line: {
+	width: 1
+    },
+		    name: 'Difference',
+		    		    hoverinfo: 'none'
+};
+		    
 var data = [trace1, trace2, trace3];
+var data4 = [trace4];
 
 var layout = {
     annotations: [
@@ -214,8 +227,39 @@ var layout = {
     },
 };
 
+var layout4 = {
+    showlegend: true,
+    xaxis: {
+	showgrid: true,
+	zeroline: true,
+	showline: true,
+	title: '2-theta (deg)',
+	gridwidth: 1,
+	zerolinecolor: '#969696',
+	zerolinewidth: 1,
+	linecolor: '#636363',
+	linewidth: 1,
+	mirror: 'ticks',
+	gridcolor: '#bdbdbd'
+    },
+    yaxis: {
+	title: 'Intensity',
+	showgrid: true,
+	zeroline: true,
+	gridwidth: 1,
+	showline: true,
+	zerolinecolor: '#969696',
+	zerolinewidth: 1,
+	linecolor: '#636363',
+	linewidth: 1,
+	mirror: 'ticks',
+	gridcolor: '#bdbdbd'
+    },
+};
+
 Plotly.plot(document.getElementById('xrdplot'), data, layout);
 
+Plotly.plot(document.getElementById('sumplot'), data4, layout4);
 </script>
 {% endblock %}
 

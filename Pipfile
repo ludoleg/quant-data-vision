@@ -15,6 +15,7 @@ gunicorn = "*"
 flask = "*"
 scipy = "*"
 numpy = "*"
+flask-login = "*"
 
 
 [requires]

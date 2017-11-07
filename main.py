@@ -162,6 +162,10 @@ def process():
     twoT = userData[0]
     diff = userData[1]
 
+    Sum = calcdiff
+    difference_magnification = 1
+    difference = (diff - Sum) * difference_magnification
+    # print difference
     # logging.debug(results)
     # logging.info("Done with processing")
 
@@ -178,6 +182,7 @@ def process():
         'diff': diff.tolist(),
         'bgpoly': bgpoly.tolist(),
         'sum': calcdiff.tolist(),
+        'difference': difference.tolist(),
         'url_text': csv,
         'key': 'ludo',
         'samplename': filename,
