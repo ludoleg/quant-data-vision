@@ -60,7 +60,7 @@ def setQthresh(RIR):
             Thresh[i] = 2
     return Thresh
 
-def Qanalyze(userData, difdata, selection, instrParams):
+def Qanalyze(userData, difdata, selection, instrParams, autoremove):
     """
     This function orchestrates the quantitative analysis
     All critical functions are imported from QRDtools
@@ -96,7 +96,7 @@ def Qanalyze(userData, difdata, selection, instrParams):
     BGsmoothing,w,w2,Polyorder,addBG,INIsmoothing,OStarget = Setparameters()
 
     BGpoly = BGfit(angle, diff, BGsmoothing, w, w2, Polyorder)
-
+    #BGpoly = BGsmooth_and_strip_rdmstep(diff, 10, 2, 100)
     # logging.debug('Starting PhaseAnalysis')
     # logging.debug(phaselist)
     
@@ -127,11 +127,11 @@ def Qanalyze(userData, difdata, selection, instrParams):
         optimize = True
     else:
         initialize = False
-        optimize = False        
+        optimize = False     
     
     starttime = time.time()
     
-    if initialize:
+    if initialize and autoremove:
         logging.info("Start Initialization")
         Iinit = getIinitPatDB(angle,diff,BGpoly,PatDB, code,enable, INIsmoothing, OStarget)
         Ithresh = 0.05        
@@ -165,7 +165,7 @@ def Qanalyze(userData, difdata, selection, instrParams):
     if optimize:
         
         logging.info("Start computing optimization")
-        code, RIR, enable, Thresh, I, PatDB = QrefinelstsqPatDB(angle, diff, BGpoly, code, RIR, enable, Thresh, Iinit, PatDB)
+        code, RIR, enable, Thresh, I, PatDB = QrefinelstsqPatDB(angle, diff, BGpoly, code, RIR, enable, Thresh, Iinit, PatDB, autoremove)
         logging.info("Done computing optimization")
     
         #####  reorganize results by decreasing % order #########
@@ -213,6 +213,31 @@ def gausspeakerf(X,X0,S):
         I[i] = phi((X[i]-X0+step/2)/S) - phi((X[i]-X0-step/2)/S)        
     return I
 '''
+def smoothing(Y,T):
+    smooth = np.zeros_like(Y)
+    for i in range(0,len(Y)):
+        minsmooth = max(i-T/2, T/2)
+        maxsmooth = min(i+T/2, len(Y)-T/2)
+        smooth[i] = np.mean(Y[minsmooth:maxsmooth])
+    return smooth
+
+def BGsmooth_and_strip_rdmstep(Y, stripwindow, rdmfactor, iterations):   
+    '''
+    background striping inspired by the stripping in PyMCA but a randomization of the stripping window is added to remove ripples
+    allow wider windows to be used, and fewer iterations than regular stripping.
+    recommended setting:  Stripwindow = 15  (2xFWHM in points), rdmfactor = stripwindow/5, iterations = 100 
+    initial smoothing of data avoids anchoring on low point of the noise.
+    '''
+    datain = smoothing(Y, 5)
+    dataout = np.zeros_like(datain)
+    for i in range(0,iterations):
+        rdmstep = np.int_(np.random.randn(len(datain))*rdmfactor+stripwindow)
+        #print"random step mean: %s  max: %s   min: %s" %(np.average(rdmstep), max(rdmstep), min(rdmstep))
+        for j in range(0,len(datain)):
+            dataout[j]=min(datain[j], (datain[max(0,j-rdmstep[j])]+datain[min(len(datain)-1, j+rdmstep[j])])/2)
+        datain = dataout
+    #dataout = smoothing(dataout, 5)  #optional smooting of output background, not really needed.
+    return dataout
 
 def gausspeak(X,X0,S):
     #X = 2Theta array, X0+peak position, S=sigma
@@ -588,7 +613,7 @@ def residualPatDB(I, Yexp, PatDB):
     return (Yexp-sumPat(I, PatDB))
 
 
-def QrefinelstsqPatDB(angle,diff,BGpoly, mineral, RIR, enable, Thresh, Iinit, PatDB):
+def QrefinelstsqPatDB(angle,diff,BGpoly, mineral, RIR, enable, Thresh, Iinit, PatDB, autoremove):
     """
     This function refine the % values of the mineral in the mixture using least-square optimization method.
     Requires scipy
@@ -610,16 +635,17 @@ def QrefinelstsqPatDB(angle,diff,BGpoly, mineral, RIR, enable, Thresh, Iinit, Pa
         I=abs(I)       
         logging.info( "end LSTSQ #%s",  counter)
 
-        enable2 = Qthresholding(mineral, enable, Thresh, I)
-        #I *= enable2
-        
-        if sum(enable2) < sum(enable):
-            Keep_refining = True
-            enable = enable2
-            mineral, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(code, RIR, enable, Thresh, I, PatDB)
-        
-        if counter < 3:
-            Keep_refining = True
+        if autoremove:
+            enable2 = Qthresholding(mineral, enable, Thresh, I)
+            #I *= enable2
+            
+            if sum(enable2) < sum(enable):
+                Keep_refining = True
+                enable = enable2
+                mineral, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(code, RIR, enable, Thresh, I, PatDB)
+            
+            if counter < 3:
+                Keep_refining = True
 
         logging.info( "lstsq computing time =%s", (time.time()-t0))
         

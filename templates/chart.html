@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% block title %}QAnalyze - XRD pattern chart{% endblock %}
 {% block content %}
-<div id="xrdplot" style="width:1200px;height:400px;"></div>
 <div id="sumplot" style="width:1200px;height:400px;"></div>
+<div id="xrdplot" style="width:1200px;height:400px;"></div>
 <div class="container">
   <div class="row">
     <div class="col-lg-3">
@@ -10,15 +10,6 @@
       <h4>Database: {{ mode }}</h4>
       <button onclick="myFunction()">Add/Remove phase</button>
       <div>
-        <table>
-          <tr>
-            <th>Database</th>
-          </tr>
-          <tr><td><a href="/process?dbinventory=rock">Rock</a></td></tr>
-          <tr><td><a href="/process?dbinventory=cement">Cement</a></td></tr>
-          <tr><td><a href="/process?dbinventory=pigment">Pigment</a></td></tr>
-          <tr><td><a href="/process?dbinventory=chemin">Chemin</a></td></tr>
-        </table>
       </div>
     </div>
     <div class="col-lg-6">
@@ -198,7 +189,6 @@ var layout = {
 	    align: 'right'
 	}],
     showlegend: true,
-    title: '{{ samplename }}',
     xaxis: {
 	showgrid: true,
 	zeroline: true,
@@ -229,11 +219,11 @@ var layout = {
 
 var layout4 = {
     showlegend: true,
-    xaxis: {
+title: '{{ samplename }}',
+xaxis: {
 	showgrid: true,
 	zeroline: true,
 	showline: true,
-	title: '2-theta (deg)',
 	gridwidth: 1,
 	zerolinecolor: '#969696',
 	zerolinewidth: 1,

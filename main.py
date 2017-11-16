@@ -99,6 +99,7 @@ def process():
         # parse sample data file wrt format
         filename = uploaded_file.filename
         session['filename'] = filename
+        session['autoremove'] = True
 
         if uploaded_file and allowed_file(uploaded_file.filename):
             # Make a valid version of filename for any file ystem
@@ -149,7 +150,7 @@ def process():
     # Load in the DB file
     difdata = open(DBname, 'r').readlines()
 
-    results, BG, calcdiff = qxrd.Qanalyze(userData, difdata, selectedphases, InstrParams)
+    results, BG, calcdiff = qxrd.Qanalyze(userData, difdata, selectedphases, InstrParams, session['autoremove'])
     # print results
     # session['results'] = results
     sel, ava = rebalance(results)
@@ -325,6 +326,7 @@ def phase():
         availlist.sort()
         session['available'] = availlist
         session['selected'] = selectedlist
+        session['autoremove'] = False
         # print '####### Inside Phase ####'
         # print session['selected']
         # print '####### Inside Phase ####'
