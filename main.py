@@ -13,6 +13,8 @@
 # limitations under the License.
 
 # [START app]
+from models import db
+
 import logging
 
 import numpy as np
@@ -44,6 +46,20 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'Ludo'
 
 app.config['DEBUG'] = True
+
+POSTGRES = {
+    'user': 'ludo',
+    'pw': '',
+    'db': 'qanalyze',
+    'host': 'localhost',
+    'port': '5432',
+}
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:%(pw)s@%(host)s:%(port)s/%(db)s' % POSTGRES
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
+db.init_app(app)
 
 @app.route('/')
 def hello():

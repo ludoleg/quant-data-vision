@@ -16,6 +16,10 @@ flask = "*"
 scipy = "*"
 numpy = "*"
 flask-login = "*"
+flask-migrate = "*"
+flask-sqlalchemy = "*"
+flask-script = "*"
+"psycopg2" = "*"
 
 
 [requires]
