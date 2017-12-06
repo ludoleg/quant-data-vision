@@ -1,7 +1,7 @@
 from flask import Flask, request, render_template, session, \
     make_response, redirect, logging
 from werkzeug.utils import secure_filename
-import os
+
 import numpy as np
 import StringIO
 import csv
@@ -13,19 +13,6 @@ import qxrd
 import qxrdtools
 import phaselist
 
-UPLOAD_DIR = 'uploads'
-UPLOAD_FOLDER = UPLOAD_DIR
-
-if not os.path.isdir(UPLOAD_DIR):
-    os.mkdir(UPLOAD_DIR)
-
-POSTGRES = {
-    'user': 'ludo',
-    'pw': '',
-    'db': 'qanalyze',
-    'host': 'localhost',
-    'port': '5432',
-}
 
 ALLOWED_EXTENSIONS = set(['txt', 'plv', 'csv', 'mdi', 'dif'])
 
@@ -33,11 +20,10 @@ ALLOWED_EXTENSIONS = set(['txt', 'plv', 'csv', 'mdi', 'dif'])
 app = Flask(__name__)
 
 # config
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.secret_key = 'Ludo'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:%(pw)s@%(host)s:%(port)s/%(db)s' % POSTGRES
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-app.config['DEBUG'] = True
+import os
+app.config.from_object(os.environ['APP_SETTINGS'])
+app.config['UPLOAD_FOLDER'] = 'uploads'
+
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
 
@@ -218,7 +204,7 @@ def process():
     angle = twoT
     # diff = diff
     bgpoly = BG
-    #calcdiff = calcdiff
+    # calcdiff = calcdiff
     # csv = session_data_key.urlsafe()
     csv = 'ODR'
 
@@ -281,7 +267,7 @@ def odr():
         angle = twoT
         # diff = diff
         bgpoly = BG
-        #calcdiff = calcdiff
+        # calcdiff = calcdiff
 
         # csv = session_data_key.urlsafe()
         csv = 'ODR'
@@ -407,8 +393,8 @@ def phase():
         return render_template('phase.html', **template_vars)
 
     #    return "Total computation  time = %.2fs" %(time.time()-t0)
-    #return_str = ''
-    #return_str += 'results: {}<br />'.format(str(results))
+    # return_str = ''
+    # return_str += 'results: {}<br />'.format(str(results))
     # return return_str
 
 
@@ -452,8 +438,8 @@ def reformat(results):
 
     # selected = [name+code for a in name]
 
-    #selected = [name[0]+'\t'+str(a[1]) for a in results]
-    #selected = [(name, code) for a in name]
+    # selected = [name[0]+'\t'+str(a[1]) for a in results]
+    # selected = [(name, code) for a in name]
     # print available
     # print selected
     selected = [a[0] + '\t' + str(a[1]) for a in results]
