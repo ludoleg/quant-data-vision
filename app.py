@@ -14,6 +14,7 @@ import qxrdtools
 import phaselist
 
 ALLOWED_EXTENSIONS = set(['txt', 'plv', 'csv', 'mdi', 'dif'])
+UPLOAD_DIR = 'uploads'
 
 # create the application object
 app = Flask(__name__)
@@ -21,7 +22,7 @@ app = Flask(__name__)
 # config
 import os
 app.config.from_object(os.environ['APP_SETTINGS'])
-UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_DIR
 
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
@@ -31,8 +32,8 @@ db = SQLAlchemy(app)
 
 from models import *
 
-if not os.path.isdir(UPLOAD_FOLDER):
-    os.mkdir(UPLOAD_FOLDER)
+if not os.path.isdir(UPLOAD_DIR):
+    os.mkdir(UPLOAD_DIR)
 
 
 def rebalance(results):
