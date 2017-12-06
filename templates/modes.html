@@ -17,7 +17,6 @@
                                 <tr>
                                     <th class="col-lg-1"></th>
 				    <th class="col-lg-2">Name</th>
-				    <th class="col-lg-2">Description</th>
 				    <th class="col-lg-1">Target</th>
                                     <th class="col-lg-1">Lambda</th>
                                     <th class="col-lg-1">FWHMA</th>
@@ -29,16 +28,15 @@
                             <tbody>
                                 {% for mode in modes %}
                                 <tr>
-                                    <td><input type="checkbox" name="mode_id" value="{{ mode.key.id() }}"></td>
+                                    <td><input type="checkbox" name="mode_id" value="{{ mode.id }}"></td>
                                     <td>{{ mode.title }}</td>
-                                    <td>{{ mode.description }}</td>
                                     <td>{{ mode.qtarget }}</td>
                                     <td>{{ mode.qlambda }}</td>
                                     <td>{{ mode.fwhma }}</td>
                                     <td>{{ mode.fwhmb }}</td>
                                     <td>{{ mode.inventory }}</td>
                                     <!-- get numeric ID of entity key -->
-                                    <td><a href="/modes/edit?id={{ mode.key.id() }}">Edit</a></td>
+                                    <td><a href="/modes/edit?id={{ mode.id }}">Edit</a></td>
                                 </tr>
                                 {% else %}
                                     <tr>
