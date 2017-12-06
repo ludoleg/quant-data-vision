@@ -1,121 +1,19 @@
-<<<<<<< HEAD:app.py
-# Copyright 2015 Google Inc. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# [START app]
-from flask_sqlalchemy import SQLAlchemy
-
-import logging
-=======
-from flask import Flask, request, render_template, session, \
+from flask import Flask, request, render_template, url_for, session, \
     make_response, redirect, logging
 from werkzeug.utils import secure_filename
->>>>>>> 915d7468ca813b892133bc374dac10dfb00ac36a:app.py
 
 import numpy as np
 import StringIO
 import csv
 
-<<<<<<< HEAD:app.py
-from flask import Flask, request, render_template, session, make_response, redirect, url_for, flash
-from werkzeug.utils import secure_filename
-=======
 from flask_sqlalchemy import SQLAlchemy
->>>>>>> 915d7468ca813b892133bc374dac10dfb00ac36a:app.py
 
 # Application modules
 import qxrd
 import qxrdtools
 import phaselist
 
-
 ALLOWED_EXTENSIONS = set(['txt', 'plv', 'csv', 'mdi', 'dif'])
-<<<<<<< HEAD:app.py
-POSTGRES = {
-    'user': 'ludo',
-    'pw': '',
-    'db': 'qanalyze',
-    'host': 'localhost',
-    'port': '5432',
-}
-
-# [start config]
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:%(pw)s@%(host)s:%(port)s/%(db)s' % POSTGRES
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://ludo@localhost/qanalyze'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-app.secret_key = 'Ludo'
-# app.secret_key = os.urandom(12)
-
-app.config['DEBUG'] = True
-
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
-#db.init_app(app)
-db = SQLAlchemy(app)
-
-# Models
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    nickname = db.Column(db.String(64), index=True, unique=True)
-    email = db.Column(db.String(120), index=True, unique=True)
-    modes = db.relationship('Mode', backref='author', lazy='dynamic')
-
-    @property
-    def is_authenticated(self):
-        return True
-
-    @property
-    def is_active(self):
-        return True
-        
-
-    @property
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        try:
-            return unicode(self.id)
-        except NameError:
-            return str(self.id)
-
-    def __repr__(self):
-        return '<User %r>' % (self.nickname)
-
-class Mode(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    #    title = db.Column(db.String(64), unique=True)
-    title = db.Column(db.String(64))
-    qlambda = db.Column(db.Float)
-    target = db.Column(db.String(64))
-    fwhma = db.Column(db.Float)
-    fwhmb = db.Column(db.Float)
-    inventory = db.Column(db.String(64))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
-    def __init__(self, title, qlambda, target, fwhma, fwhmb, inventory):
-        self.title = title
-        self.qlambda = qlambda
-        self.target = target
-        self.fwhma = fwhma
-        self.fwhmb = fwhmb
-        self.inventory = inventory
-    
-    def __repr__(self):
-        return '<User %r>' % (self.nickname)
-=======
 
 # create the application object
 app = Flask(__name__)
@@ -123,7 +21,7 @@ app = Flask(__name__)
 # config
 import os
 app.config.from_object(os.environ['APP_SETTINGS'])
-app.config['UPLOAD_FOLDER'] = 'uploads'
+UPLOAD_FOLDER = 'uploads'
 
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
@@ -132,6 +30,9 @@ app.config['UPLOAD_FOLDER'] = 'uploads'
 db = SQLAlchemy(app)
 
 from models import *
+
+if not os.path.isdir(UPLOAD_FOLDER):
+    os.mkdir(UPLOAD_FOLDER)
 
 
 def rebalance(results):
@@ -169,7 +70,6 @@ def rebalance(results):
     available.sort()
     return selected, available
 
->>>>>>> 915d7468ca813b892133bc374dac10dfb00ac36a:app.py
 
 @app.route('/')
 def home():
@@ -181,27 +81,13 @@ def home():
         session['available'] = phaselist.availablePhases
         return render_template('index.html')
 
- 
-@app.route('/login', methods=['POST'])
-def do_admin_login():
-    if request.form['password'] == 'password' and request.form['username'] == 'admin':
-        session['logged_in'] = True
-    else:
-        flash('wrong password!')
-    return home()
-
-@app.route("/logout")
-def logout():
-    session['logged_in'] = False
-    return home()
-
 
 @app.route('/about')
 def about():
     return render_template('about.html')
 
-<<<<<<< HEAD:app.py
-@app.route('/modes', methods=['GET','POST'])
+
+@app.route('/modes', methods=['GET', 'POST'])
 def modes():
     if request.method == 'GET':
         myModes = Mode.query.all()
@@ -214,8 +100,9 @@ def modes():
             db.session.delete(m)
         db.session.commit()
         return redirect(url_for('modes'))
-        
-@app.route('/modes/create', methods=['GET','POST'])
+
+
+@app.route('/modes/create', methods=['GET', 'POST'])
 def createmodes():
     if request.method == 'GET':
         return render_template('modesCreate.html')
@@ -230,17 +117,14 @@ def createmodes():
         db.session.add(mode)
         db.session.commit()
         return redirect(url_for('modes'))
-    
-=======
 
->>>>>>> 915d7468ca813b892133bc374dac10dfb00ac36a:app.py
+
 @app.route('/odr_demo')
 def odr_demo():
     return render_template('odr_demo.html')
 
+
 # [START process]
-
-
 @app.route('/process', methods=['GET', 'POST'])
 def process():
     if request.method == 'GET':

@@ -11,8 +11,12 @@ class Mode(db.Model):
     fwhmb = db.Column(db.Float)
     inventory = db.Column(db.String(64), unique=True)
 
-    def __init__(self, title, inventory):
+    def __init__(self, title, qlambda, target, fwhma, fwhmb, inventory):
         self.title = title
+        self.qlambda = qlambda
+        self.target = target
+        self.fwhma = fwhma
+        self.fwhmb = fwhmb
         self.inventory = inventory
 
     def __repr__(self):
