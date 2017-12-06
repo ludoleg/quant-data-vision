@@ -74,13 +74,10 @@ def rebalance(results):
 
 @app.route('/')
 def home():
-    if not session.get('logged_in'):
-        return render_template('login.html')
-    else:
-        session['dbname'] = 'difdata-rockforming.txt'
-        session['selected'] = phaselist.rockPhases
-        session['available'] = phaselist.availablePhases
-        return render_template('index.html')
+    session['dbname'] = 'difdata-rockforming.txt'
+    session['selected'] = phaselist.rockPhases
+    session['available'] = phaselist.availablePhases
+    return render_template('index.html')
 
 
 @app.route('/about')
