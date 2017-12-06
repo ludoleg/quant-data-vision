@@ -1,3 +1,4 @@
+<<<<<<< HEAD:app.py
 # Copyright 2015 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,29 +17,31 @@
 from flask_sqlalchemy import SQLAlchemy
 
 import logging
+=======
+from flask import Flask, request, render_template, session, \
+    make_response, redirect, logging
+from werkzeug.utils import secure_filename
+>>>>>>> 915d7468ca813b892133bc374dac10dfb00ac36a:app.py
 
 import numpy as np
-
-import os
-import phaselist
-
 import StringIO
 import csv
 
+<<<<<<< HEAD:app.py
 from flask import Flask, request, render_template, session, make_response, redirect, url_for, flash
 from werkzeug.utils import secure_filename
+=======
+from flask_sqlalchemy import SQLAlchemy
+>>>>>>> 915d7468ca813b892133bc374dac10dfb00ac36a:app.py
 
-#Application modules
+# Application modules
 import qxrd
 import qxrdtools
+import phaselist
 
-UPLOAD_DIR = 'uploads'
-UPLOAD_FOLDER = UPLOAD_DIR
-
-if not os.path.isdir(UPLOAD_DIR):
-    os.mkdir(UPLOAD_DIR)
 
 ALLOWED_EXTENSIONS = set(['txt', 'plv', 'csv', 'mdi', 'dif'])
+<<<<<<< HEAD:app.py
 POSTGRES = {
     'user': 'ludo',
     'pw': '',
@@ -112,6 +115,61 @@ class Mode(db.Model):
     
     def __repr__(self):
         return '<User %r>' % (self.nickname)
+=======
+
+# create the application object
+app = Flask(__name__)
+
+# config
+import os
+app.config.from_object(os.environ['APP_SETTINGS'])
+app.config['UPLOAD_FOLDER'] = 'uploads'
+
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
+
+# create the sqlalchemy object
+db = SQLAlchemy(app)
+
+from models import *
+
+
+def rebalance(results):
+    # Get the base list
+    if session['dbname'] == 'difdata_cement.txt':
+        db = phaselist.cementPhases
+    elif session['dbname'] == 'difdata_pigment.txt':
+        db = phaselist.pigmentPhases
+    elif session['dbname'] == 'difdata-rockforming.txt':
+        db = phaselist.rockPhases
+    elif session['dbname'] == 'difdata_CheMin.txt':
+        db = phaselist.cheminPhases
+
+    available = []
+    selected = [a[0] for a in results]
+    inventory = [a.split('\t') for a in db]
+    name = [a[0] for a in inventory]
+    code = [a[1] for a in inventory]
+
+    # for i in range(0, len(phaselist.rockPhases)):
+    #     if selected[i] in phaselist.rockPhases[i]:
+    #         print "yes"
+    i = 0
+    while i < len(name):
+        if any(word in name[i] for word in selected):
+            # print i, name[i]
+            del name[i], code[i]
+        i += 1
+
+    for i in range(len(name)):
+        available.append(name[i] + '\t' + code[i])
+
+    selected = [a[0] + '\t' + str(a[1]) for a in results]
+    selected.sort()
+    available.sort()
+    return selected, available
+
+>>>>>>> 915d7468ca813b892133bc374dac10dfb00ac36a:app.py
 
 @app.route('/')
 def home():
@@ -137,10 +195,12 @@ def logout():
     session['logged_in'] = False
     return home()
 
+
 @app.route('/about')
 def about():
     return render_template('about.html')
 
+<<<<<<< HEAD:app.py
 @app.route('/modes', methods=['GET','POST'])
 def modes():
     if request.method == 'GET':
@@ -171,38 +231,44 @@ def createmodes():
         db.session.commit()
         return redirect(url_for('modes'))
     
+=======
+
+>>>>>>> 915d7468ca813b892133bc374dac10dfb00ac36a:app.py
 @app.route('/odr_demo')
 def odr_demo():
     return render_template('odr_demo.html')
 
 # [START process]
-@app.route('/process', methods=['GET','POST'])
+
+
+@app.route('/process', methods=['GET', 'POST'])
 def process():
     if request.method == 'GET':
         inventory = request.args.get('dbinventory')
         # Unpack the selected inventory
         if inventory == "cement":
             # phaselistname = 'difdata_cement_inventory.csv'
-            session['dbname'] ='difdata_cement.txt'
+            session['dbname'] = 'difdata_cement.txt'
             session['selected'] = phaselist.cementPhases
             session['available'] = phaselist.availablePhases
         elif inventory == "pigment":
             # phaselistname = 'difdata_pigment_inventory.csv'
-            session['dbname'] ='difdata_pigment.txt'
+            session['dbname'] = 'difdata_pigment.txt'
             session['selected'] = phaselist.pigmentPhases
             session['available'] = phaselist.availablePhases
         elif inventory == "rock":
             # phaselistname = 'difdata-rockforming_inventory.csv'
-            session['dbname'] ='difdata-rockforming.txt'
+            session['dbname'] = 'difdata-rockforming.txt'
             session['selected'] = phaselist.rockPhases
             session['available'] = phaselist.availablePhases
         elif inventory == "chemin":
             # phaselistname = 'difdata_CheMin_inventory.csv'
-            session['dbname'] ='difdata_CheMin.txt'
+            session['dbname'] = 'difdata_CheMin.txt'
             session['selected'] = phaselist.cheminPhases
             session['available'] = phaselist.availablePhases
         else:
-            logging.critical("Can't find inventory")
+            #            logging.critical("Can't find inventory")
+            print "Can't find inventory"
         print session['dbname']
 
     if request.method == 'POST':
@@ -220,7 +286,7 @@ def process():
             # Make a valid version of filename for any file ystem
             filename = secure_filename(uploaded_file.filename)
             uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'],
-                                   filename))
+                                            filename))
         else:
             return 'File not supported', 400
 
@@ -235,13 +301,13 @@ def process():
     # print(selectedPhases, file=sys.stderr)
     userData = qxrdtools.openXRD(XRDdata, filename)
     # print userData
-    
+
     Lambda = 0.0
     Target = 'Co'
     FWHMa = 0.0
     FWHMb = 0.35
 
-        # Boundaries check
+    # Boundaries check
     if(Lambda > 2.2 or Lambda == 0):
         Lambda = ''
     if(FWHMa > 0.01):
@@ -251,27 +317,29 @@ def process():
     if(FWHMb > 1.0):
         FWHMb = 1.0
     if(FWHMb < 0.01):
-        FWHMb = 0.01    
-        
-    InstrParams = {"Lambda": Lambda, "Target": Target, "FWHMa": FWHMa, "FWHMb": FWHMb}
+        FWHMb = 0.01
+
+    InstrParams = {"Lambda": Lambda, "Target": Target,
+                   "FWHMa": FWHMa, "FWHMb": FWHMb}
 
     # Dif data captures all cristallographic data
     selectedphases = []
-    for i in range (len(selectedPhases)):
+    for i in range(len(selectedPhases)):
         name, code = selectedPhases[i].split('\t')
         code = int(code)
-        selectedphases.append((name,code))
+        selectedphases.append((name, code))
 
     # Load in the DB file
     difdata = open(DBname, 'r').readlines()
 
-    results, BG, calcdiff = qxrd.Qanalyze(userData, difdata, selectedphases, InstrParams, session['autoremove'])
+    results, BG, calcdiff = qxrd.Qanalyze(
+        userData, difdata, selectedphases, InstrParams, session['autoremove'])
     # print results
     # session['results'] = results
     sel, ava = rebalance(results)
     session['selected'] = sel
     session['available'] = ava
-    
+
     # print(twoT.tolist(), file=sys.stderr)
     # print(userData, file=sys.stderr)
 
@@ -288,7 +356,7 @@ def process():
     angle = twoT
     # diff = diff
     bgpoly = BG
-    #calcdiff = calcdiff
+    # calcdiff = calcdiff
     # csv = session_data_key.urlsafe()
     csv = 'ODR'
 
@@ -310,12 +378,14 @@ def process():
 # [END process]
 
 # [START ODR service]
-@app.route('/odr', methods=['GET','POST'])
+
+
+@app.route('/odr', methods=['GET', 'POST'])
 def odr():
     if request.method == 'POST':
-        #L oad data from request
+        # L oad data from request
         json_data = request.get_json()
-        
+
         data = json_data
         sample = data['sample']
         filename = sample['name']
@@ -329,14 +399,16 @@ def odr():
 
         phasearray = data['phases']
         selectedphases = [(d['name'], d['AMCSD_code']) for d in phasearray]
-        InstrParams = {"Lambda": 0, "Target": 'Co', "FWHMa": 0.00, "FWHMb": 0.35}
-        DBname ='difdata_CheMin.txt'
+        InstrParams = {"Lambda": 0, "Target": 'Co',
+                       "FWHMa": 0.00, "FWHMb": 0.35}
+        DBname = 'difdata_CheMin.txt'
         # Dif data captures all cristallographic data
         # Load in the DB file
         difdata = open(DBname, 'r').readlines()
         userData = (angle, diff)
         # print(userData)
-        results, BG, calcdiff = qxrd.Qanalyze(userData, difdata, selectedphases, InstrParams)
+        results, BG, calcdiff = qxrd.Qanalyze(
+            userData, difdata, selectedphases, InstrParams)
 
         twoT = userData[0]
         diff = userData[1]
@@ -347,13 +419,13 @@ def odr():
         angle = twoT
         # diff = diff
         bgpoly = BG
-        #calcdiff = calcdiff
+        # calcdiff = calcdiff
 
         # csv = session_data_key.urlsafe()
         csv = 'ODR'
         session['results'] = results
         session['filename'] = filename
-        
+
         template_vars = {
             'phaselist': results,
             'angle': angle.tolist(),
@@ -390,6 +462,8 @@ def phaseAnalysis():
     # return render_template('selector.html')
 
 # [START CVS]
+
+
 @app.route('/csvDownload', methods=['GET'])
 def csvDownload():
     line = StringIO.StringIO()
@@ -397,16 +471,20 @@ def csvDownload():
     cw.writerow(['Mineral', 'AMCSD', 'Mass %'])
     cw.writerows(session['results'])
     output = make_response(line.getvalue())
-    output.headers["Content-Disposition"] = "attachment; filename={}.csv".format(session['filename'])
+    output.headers["Content-Disposition"] = "attachment; filename={}.csv".format(
+        session['filename'])
     output.headers["Content-type"] = "text/csv"
     return output
 # [END CVS]
+
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # def compute_mean_std(filename=None):
+
+
 def compute_function(filename=None):
     data = np.loadtxt(os.path.join('uploads', filename))
     return """
@@ -417,6 +495,7 @@ Data from file <tt>%s</tt>:
 <tr><td> st.dev. </td><td> %.3g </td></tr>
 """ % (filename, np.mean(data), np.std(data))
 
+
 @app.errorhandler(500)
 def server_error(e):
     logging.exception('An error occurred during a request.')
@@ -425,6 +504,7 @@ def server_error(e):
     See logs for full stacktrace.
     """.format(e), 500
 
+
 if __name__ == '__main__':
     # This is used when running locally. Gunicorn is used to run the
     # application on Google App Engine. See entrypoint in app.yaml.
@@ -432,6 +512,8 @@ if __name__ == '__main__':
     # [END app]
 
 # [START phase setting]
+
+
 @app.route('/phase', methods=['GET', 'POST'])
 def phase():
     if request.method == 'POST':
@@ -463,30 +545,33 @@ def phase():
         return render_template('phase.html', **template_vars)
 
     #    return "Total computation  time = %.2fs" %(time.time()-t0)
-    #return_str = ''
-    #return_str += 'results: {}<br />'.format(str(results))
-    #return return_str
+    # return_str = ''
+    # return_str += 'results: {}<br />'.format(str(results))
+    # return return_str
+
 
 @app.route('/ludo')
 def ludo():
     return render_template(
         'ludo.html',
-        data=[{'name':'red'}, {'name':'green'}, {'name':'blue'}])
+        data=[{'name': 'red'}, {'name': 'green'}, {'name': 'blue'}])
 
-@app.route("/test" , methods=['GET', 'POST'])
+
+@app.route("/test", methods=['GET', 'POST'])
 def test():
     select = request.form.getlist('comp_select')
-    return(str(select)) # just to see what select is
+    return(str(select))  # just to see what select is
+
 
 def reformat(results):
     selected = [a[0] for a in results]
     available = []
     db = session['selected']
-    
+
     # print selected
     # inventory = phaselist.rockPhasesj
     # print inventory
-    inventory= [a.split('\t') for a in db]
+    inventory = [a.split('\t') for a in db]
     name = [a[0] for a in inventory]
     code = [a[1] for a in inventory]
 
@@ -499,55 +584,21 @@ def reformat(results):
             # print i, name[i]
             del name[i], code[i]
         i += 1
-    
+
     for i in range(len(name)):
-        available.append(name[i]+'\t'+code[i])
-    
+        available.append(name[i] + '\t' + code[i])
+
     # selected = [name+code for a in name]
-    
-    #selected = [name[0]+'\t'+str(a[1]) for a in results]
-    #selected = [(name, code) for a in name]   
+
+    # selected = [name[0]+'\t'+str(a[1]) for a in results]
+    # selected = [(name, code) for a in name]
     # print available
     # print selected
-    selected = [a[0]+'\t'+str(a[1]) for a in results]
+    selected = [a[0] + '\t' + str(a[1]) for a in results]
     # print selected, available
     return selected, available
 
+
 def cleanup(results):
-    selected = [a[0]+'\t'+str(a[1]) for a in results]
+    selected = [a[0] + '\t' + str(a[1]) for a in results]
     return selected
-
-def rebalance(results):
-    # Get the base list
-    if session['dbname'] == 'difdata_cement.txt':
-        db = phaselist.cementPhases
-    elif session['dbname'] == 'difdata_pigment.txt':
-        db = phaselist.pigmentPhases
-    elif session['dbname'] == 'difdata-rockforming.txt':
-        db = phaselist.rockPhases
-    elif session['dbname'] == 'difdata_CheMin.txt':
-        db = phaselist.cheminPhases
-        
-    available = []
-    selected = [a[0] for a in results]
-    inventory= [a.split('\t') for a in db]
-    name = [a[0] for a in inventory]
-    code = [a[1] for a in inventory]
-
-    # for i in range(0, len(phaselist.rockPhases)):
-    #     if selected[i] in phaselist.rockPhases[i]:
-    #         print "yes"
-    i = 0
-    while i < len(name):
-        if any(word in name[i] for word in selected):
-            # print i, name[i]
-            del name[i], code[i]
-        i += 1
-    
-    for i in range(len(name)):
-        available.append(name[i]+'\t'+code[i])
-        
-    selected = [a[0]+'\t'+str(a[1]) for a in results]
-    selected.sort()
-    available.sort()
-    return selected, available

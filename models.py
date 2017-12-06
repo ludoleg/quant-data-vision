@@ -1,8 +1,8 @@
-from flask_sqlalchemy import SQLAlchemy
+from app import db
 
-db = SQLAlchemy()
 
 class Mode(db.Model):
+    __tablename__ = "modes"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(64), unique=True)
     qlambda = db.Column(db.Float)
@@ -11,8 +11,9 @@ class Mode(db.Model):
     fwhmb = db.Column(db.Float)
     inventory = db.Column(db.String(64), unique=True)
 
-    def __init__(self, title):
+    def __init__(self, title, inventory):
         self.title = title
-    
+        self.inventory = inventory
+
     def __repr__(self):
-        return '<User %r>' % (self.nickname)
+        return '<User %r>' % (self.title)
