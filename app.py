@@ -111,10 +111,31 @@ def createmodes():
         fwhma = request.form['fwhma']
         fwhmb = request.form['fwhmb']
         inventory = request.form['inventory']
-        mode = Mode(title, qlambda, target, fwhma, fwhmb, inventory)
+        mode = Mode(title, qlambda, target, fwhma,
+                    fwhmb, inventory)
         db.session.add(mode)
         db.session.commit()
         return redirect(url_for('modes'))
+
+
+@app.route('/modes/edit', methods=['GET', 'POST'])
+def editmodes():
+    if request.method == 'GET':
+        id = request.args.get('id')
+        myMode = Mode.query.get(id)
+        return render_template('modesEdit.html', mode=myMode, key=id)
+    if request.method == 'POST':
+        print request.form
+        id = request.form['key_id']
+        myMode = Mode.query.get(id)
+        myMode.title = request.form['name']
+        myMode.qlambda = request.form['lambda']
+        myMode.qtarget = request.form['target']
+        myMode.fwhma = request.form['fwhma']
+        myMode.fwhmb = request.form['fwhmb']
+        myMode.inventory = request.form['inventory']
+        db.session.commit()
+    return redirect(url_for('modes'))
 
 
 @app.route('/odr_demo')
