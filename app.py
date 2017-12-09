@@ -61,7 +61,8 @@ def rebalance(results):
         if any(word in name[i] for word in selected):
             # print i, name[i]
             del name[i], code[i]
-        i += 1
+        else:
+            i += 1
 
     for i in range(len(name)):
         available.append(name[i] + '\t' + code[i])
@@ -98,6 +99,42 @@ def modes():
             db.session.delete(m)
         db.session.commit()
         return redirect(url_for('modes'))
+
+
+@app.route('/phase', methods=['GET', 'POST'])
+def phase():
+    if request.method == 'POST':
+        selectedlist = request.form.getlist('selectedphase')
+        availlist = request.form.getlist('availablephase')
+        selectedlist.sort()
+        availlist.sort()
+        session['available'] = availlist
+        session['selected'] = selectedlist
+        session['autoremove'] = False
+        print '####### Inside Phase ####'
+        # print session['selected']
+        # print '####### Inside Phase ####'
+        print session['available']
+        return redirect('/process')
+        # result = request.form.get()
+        # return(str(selectedlist))
+        # return render_template("result.html",result = result)
+    else:
+        # mode = QuantModeModel()
+        # print(mode, file=sys.stderr)
+        # session['mode'] = mode
+        # session['selected'] = phaselist.defaultPhases
+        template_vars = {
+            'availablephaselist': session['available'],
+            'selectedphaselist': session['selected'],
+            'mode': session['dbname']
+        }
+        return render_template('phase.html', **template_vars)
+
+    #    return "Total computation  time = %.2fs" %(time.time()-t0)
+    # return_str = ''
+    # return_str += 'results: {}<br />'.format(str(results))
+    # return return_str
 
 
 @app.route('/modes/create', methods=['GET', 'POST'])
@@ -415,42 +452,6 @@ if __name__ == '__main__':
     # [END app]
 
 # [START phase setting]
-
-
-@app.route('/phase', methods=['GET', 'POST'])
-def phase():
-    if request.method == 'POST':
-        selectedlist = request.form.getlist('selectedphase')
-        availlist = request.form.getlist('availablephase')
-        selectedlist.sort()
-        availlist.sort()
-        session['available'] = availlist
-        session['selected'] = selectedlist
-        session['autoremove'] = False
-        # print '####### Inside Phase ####'
-        # print session['selected']
-        # print '####### Inside Phase ####'
-        # print session['available']
-        return redirect('/process')
-        # result = request.form.get()
-        # return(str(selectedlist))
-        # return render_template("result.html",result = result)
-    else:
-        # mode = QuantModeModel()
-        # print(mode, file=sys.stderr)
-        # session['mode'] = mode
-        # session['selected'] = phaselist.defaultPhases
-        template_vars = {
-            'availablephaselist': session['available'],
-            'selectedphaselist': session['selected'],
-            'mode': session['dbname']
-        }
-        return render_template('phase.html', **template_vars)
-
-    #    return "Total computation  time = %.2fs" %(time.time()-t0)
-    # return_str = ''
-    # return_str += 'results: {}<br />'.format(str(results))
-    # return return_str
 
 
 @app.route('/ludo')
