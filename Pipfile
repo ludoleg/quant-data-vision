@@ -22,6 +22,7 @@ flask-script = "*"
 "psycopg2" = "*"
 flask-wtf = "*"
 flask-bcrypt = "*"
+flask-testing = "*"
 
 
 [requires]
