@@ -20,6 +20,8 @@ flask-migrate = "*"
 flask-sqlalchemy = "*"
 flask-script = "*"
 "psycopg2" = "*"
+flask-wtf = "*"
+flask-bcrypt = "*"
 
 
 [requires]
