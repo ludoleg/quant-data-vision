@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>Calibration Parameters</h1>
+</div>
+<form action="/calibration"
+      method="POST"
+      enctype="multipart/form-data"
+      >
+  <div class="container">
+    <div class="row">
+      <div class="form-group col-xs-3">
+	<label for="lambda">Lambda (Å): </label>
+	<input type="text" class="form-control" name="lambda" value="{{ lambda }}">
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group col-xs-3">
+	<label for="target">Select Target:</label>
+	<select class="form-control" name="target">
+	  {% if target == "Cu" %}
+	  <option selected>Cu</option>
+	  <option>Co</option>
+	  {% else %}
+	  <option>Cu</option>
+	  <option selected>Co</option>
+	  {% endif %}
+	</select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group col-xs-3">
+	<label for="a"> FWHMa: </label>
+	<input type="text" class="form-control" name="fwhma" value="{{ a }}">
+      </div>
+      <div class="form-group col-xs-3">
+	<label for="b"> FWHMb: </label>
+	<input type="text" class="form-control" name="fwhmb" value="{{ b }}">
+      </div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-xs-3">
+	<button type="submit" class="btn btn-primary">Save Parameters</button>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+

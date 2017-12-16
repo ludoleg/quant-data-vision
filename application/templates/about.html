@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}QAnalyze: Mineral analysis using X-Ray Diffraction data{% endblock %}
+{% block content %}
+<div class="container">
+  <h2>Important note to users and testers</h2>
+  <p>
+    Qanalyze is in a still pre-beta phase.</p>
+  <h2>About XRD.Qanalyze</h2>
+  XRD.Qanalyze is an automated cloud-based application for quantitative analysis of mineral samples using X-ray diffraction (XRD) data.
+  It is currently free of charge and requires a google/gmail login.
+</p>
+<p>
+  Qanalyze applies full pattern fitting methods to compute mineral abundances from X-ray diffraction data.  
+  <br>
+  Qanalyze brings unsurpassed user-friendliness to XRD data analysis.
+</p>
+<p>
+  While Qanalyze principles are not limited to a particular type of XRD instrument, it is currently focused on data collected with portable and benchtop XRD instruments.
+</p>
+<p>
+  Qanalyze currently works best with a limited selection of phase candidates.
+  <br>
+  See and change the list in Settings > Set Phases.
+</p>
+<p>
+  Instrumental parameters vary from system to system.
+  <br>
+  For best results, set your instrument parameters in Settings > Calibration Parameters.
+</p>
+<p>
+  <u>Instructions</u>
+</p>
+<p>
+  1. Upload your XRD pattern  (formats currently accepted: txt, plv, mdi, dif)
+</p>
+<p>
+  2. Wait a few seconds
+</p>
+<p>
+  3. Review the results in a graph overlaying experimental and calculated data and a table listing minerals found and abundances.
+</p>
+<p>
+  4. Download  results in a CSV file.
+</p>
+<h2>About us</h2>
+<p>
+  Qanalyze is developed by a dedicated team of experienced software engineers and instrument scientists  based in California, USA.
+</p>
+</div>
+{% endblock %}

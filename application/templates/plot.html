@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}QAnalyze - XRD pattern chart{% endblock %}
+{% block content %}
+<div id="xrdplot" style="width:1200px;height:400px;"></div>
+<div class="container">
+  <div class="row">
+    <div class="col-sm-4">
+    </div>
+    <div class="col-sm-4">
+      <table class="table table-bordered table-condensed" style="width: auto;" id="phasetable">
+      </table>
+    </div>
+    <div class="col-sm-4">
+      <div id="csvbutton" >
+	<a href="/csv" type="button" class="btn btn-primary btn-xs">Download CSV</button></a>
+</div>
+    </div>
+  </div>
+</div>
+<!-- Modal -->
+<div class="modal fade bs-example-modal-sm" id="myModal" role="dialog">
+  <!-- Modal content-->
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+	<h4 class="modal-title">Processing...</h4>
+      </div>
+      <div class="modal-body">
+	<div class="progress progress-striped active">
+	  <div class="progress-bar progress-bar-info"  role="progressbar" style="width: 100%">
+	  </div>
+	</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+$("#myModal").modal();
+$("#csvbutton").hide();
+$( document ).ready(function() {
+    $.ajax({
+	url: "/crank",
+	type: 'GET',
+	dataType: 'json', // added data type
+	success: function(arrays) {
+	    DrawChart(arrays);
+	    console.log(arrays.phases);
+	    CreateTable(arrays.phases);
+	    $("#myModal").modal('hide')
+
+	}
+    });
+});
+
+function CreateTable(array)
+{
+    var trHTML = '<tr><th bgcolor="#DDDDDD">Mineral</th><th bgcolor="#DDDDDD">Mass %</th></tr>';
+
+    $.each(array, function (i, item) {
+        trHTML += '<tr ><td class="col-md-3">' + item[0] + '</td><td class="col-md-3" align="right">' + item[1] + '</td></tr>';
+    });
+$("#phasetable").append(trHTML);
+$("#csvbutton").show();
+}
+
+function DrawChart(arrays)
+{
+    var angle = arrays.angle;
+    var diff = arrays.diff;
+    var bgpoly = arrays.bgpoly;
+    var calcdiff = arrays.calcdiff;
+    var filename = arrays.filename;
+    var list = arrays.phases;
+
+    var phases = '';
+    for (var i = 0; i < list.length; i++) {
+	phases += list[i][0];
+	phases += ": ";
+	phases += list[i][1];
+	phases += "%<br>";
+    }
+
+    var trace1 = {
+	x: null,
+	y: null,
+	mode: 'lines',
+	line: {
+	    color: 'rgb(128, 0, 0)',
+	    width: 1
+	},
+	name: 'Data',
+		    hoverinfo: 'none'
+    };
+
+    var trace2 = {
+	x: null,
+	y: null,
+	mode: 'lines',
+	line: {
+	    width: 1
+	},
+	name: 'Background',
+		    hoverinfo: 'none'
+    };
+
+    var trace3 = {
+	x: null,
+	y: null,
+	mode: 'lines',
+	line: {
+	    width: 1
+	},
+	name: 'Fit',
+		    hoverinfo: 'none'
+    };
+
+    trace1.x = angle;
+    trace1.y = diff;
+    trace2.x = angle;
+    trace2.y = bgpoly;
+    trace3.x = angle;
+    trace3.y = calcdiff;
+    
+    var data = [trace1, trace2, trace3];
+    
+    var layout = {
+	annotations: [
+	    {
+		x: 0.99,
+		y: 0.95,
+		xref: "paper",
+		yref: "paper",
+		text: phases,
+		showarrow: false,
+		bgcolor: 'rgba(160, 236, 133, 0.7)',
+		borderpad: 6,
+		align: 'right'
+	    }],
+	showlegend: true,
+	title: null,
+	xaxis: {
+	    showgrid: true,
+	    zeroline: true,
+	    showline: true,
+	    title: '2-theta (deg)',
+	    gridwidth: 1,
+	    zerolinecolor: '#969696',
+	    zerolinewidth: 1,
+	    linecolor: '#636363',
+	    linewidth: 1,
+	    mirror: 'ticks',
+	    gridcolor: '#bdbdbd'
+	},
+	yaxis: {
+	    title: 'Intensity',
+	    showgrid: true,
+	    zeroline: true,
+	    gridwidth: 1,
+	    showline: true,
+	    zerolinecolor: '#969696',
+	    zerolinewidth: 1,
+	    linecolor: '#636363',
+	    linewidth: 1,
+	    mirror: 'ticks',
+	    gridcolor: '#bdbdbd'
+	},
+    };
+
+    layout.title = filename;
+    
+    Plotly.plot(document.getElementById('xrdplot'), data, layout);
+}
+</script>
+{% endblock %}
