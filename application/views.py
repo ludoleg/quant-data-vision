@@ -3,6 +3,8 @@ from werkzeug.utils import secure_filename
 
 from application import app
 
+from flask_login import login_required
+
 import numpy as np
 import StringIO
 import csv
@@ -81,6 +83,7 @@ def about():
 
 
 @app.route('/modes', methods=['GET', 'POST'])
+@login_required
 def modes():
     if request.method == 'GET':
         myModes = db.session.query(Mode).all()

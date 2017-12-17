@@ -23,6 +23,7 @@ flask-script = "*"
 flask-wtf = "*"
 flask-bcrypt = "*"
 flask-testing = "*"
+coverage = "*"
 
 
 [requires]

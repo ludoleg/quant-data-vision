@@ -8,6 +8,7 @@
 *.pydevproject
 *.kpf
 venv
+coverage
 
 
 # Don't store secret keys in version control
