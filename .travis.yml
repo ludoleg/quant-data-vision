@@ -1,0 +1,15 @@
+language: python
+python:
+  - "2.7"
+
+# command to install dependencies
+install:
+  - "pip install -e . --upgrade"
+  - "pipenv install --dev"
+
+# command to run tests
+script: "python manage.py test"
+
+# command to run the dependencies
+# script:
+#  - "pipenv run pytest -n 8 tests"
