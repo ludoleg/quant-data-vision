@@ -271,7 +271,7 @@ def process():
     difdata = open(DBname, 'r').readlines()
 
     results, BG, calcdiff = qxrd.Qanalyze(
-        userData, difdata, selectedphases, InstrParams, session['autoremove'])
+        userData, difdata, selectedphases, InstrParams, session['autoremove'], True)
     # print results
     # session['results'] = results
     sel, ava = rebalance(results)
