@@ -1,4 +1,4 @@
-from flask import request, render_template, url_for, session, make_response, redirect, logging
+from flask import request, render_template, url_for, session, make_response, redirect, logging, json
 from werkzeug.utils import secure_filename
 
 from application import app
@@ -8,6 +8,8 @@ from flask_login import login_required
 import numpy as np
 import StringIO
 import csv
+
+import logging
 
 # Application modules
 import qxrd
@@ -272,7 +274,9 @@ def process():
 
     results, BG, calcdiff = qxrd.Qanalyze(
         userData, difdata, selectedphases, InstrParams, session['autoremove'], True)
-    # print results
+    # print results, len(results)
+    print len(BG)
+    print len(calcdiff)
     # session['results'] = results
     sel, ava = rebalance(results)
     session['selected'] = sel
@@ -297,6 +301,7 @@ def process():
     # calcdiff = calcdiff
     # csv = session_data_key.urlsafe()
     csv = 'ODR'
+    app.logger.warning('Length of angle array" %d', len(angle))
 
     template_vars = {
         'phaselist': results,

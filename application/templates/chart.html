@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block title %}QAnalyze - XRD pattern chart{% endblock %}
 {% block content %}
-<div id="sumplot" style="width:1200px;height:400px;"></div>
 <div id="xrdplot" style="width:1200px;height:400px;"></div>
 <div class="container">
     <div class="row">
@@ -36,7 +35,8 @@
     </div>
 </div>
 <div id="phaselist" style="display: none">
-    <form action="/phase"
+    <form novalidate
+          action="/phase"
           method="POST"
           enctype="multipart/form-data"
           onsubmit="selectAllOptions();">
@@ -172,8 +172,7 @@
      hoverinfo: 'none'
  };
  
- var data = [trace1, trace2, trace3];
- var data4 = [trace4];
+ var data = [trace1, trace2, trace3, trace4];
 
  var layout = {
      annotations: [
@@ -189,6 +188,7 @@
 	     align: 'right'
 	 }],
      showlegend: true,
+     title: '{{ samplename }}',
      xaxis: {
 	 showgrid: true,
 	 zeroline: true,
@@ -217,39 +217,7 @@
      },
  };
 
- var layout4 = {
-     showlegend: true,
-     title: '{{ samplename }}',
-     xaxis: {
-	 showgrid: true,
-	 zeroline: true,
-	 showline: true,
-	 gridwidth: 1,
-	 zerolinecolor: '#969696',
-	 zerolinewidth: 1,
-	 linecolor: '#636363',
-	 linewidth: 1,
-	 mirror: 'ticks',
-	 gridcolor: '#bdbdbd'
-     },
-     yaxis: {
-	 title: 'Intensity',
-	 showgrid: true,
-	 zeroline: true,
-	 gridwidth: 1,
-	 showline: true,
-	 zerolinecolor: '#969696',
-	 zerolinewidth: 1,
-	 linecolor: '#636363',
-	 linewidth: 1,
-	 mirror: 'ticks',
-	 gridcolor: '#bdbdbd'
-     },
- };
-
  Plotly.plot(document.getElementById('xrdplot'), data, layout);
-
- Plotly.plot(document.getElementById('sumplot'), data4, layout4);
 </script>
 {% endblock %}
 
