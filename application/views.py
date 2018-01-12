@@ -301,7 +301,7 @@ def process():
     # calcdiff = calcdiff
     # csv = session_data_key.urlsafe()
     csv = 'ODR'
-    app.logger.warning('Length of angle array" %d', len(angle))
+    app.logger.warning('Length of angle array: %d', len(angle))
 
     template_vars = {
         'phaselist': results,

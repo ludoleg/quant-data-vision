@@ -8,6 +8,7 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 import os
 import logging
+import sys
 
 ################
 #### config ####
@@ -19,6 +20,8 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
+app.logger.addHandler(logging.StreamHandler(sys.stdout))
+app.logger.setLevel(logging.INFO)
 app.logger.info('Welcome to Qanalyze')
 
 
