@@ -115,7 +115,11 @@ def phase():
         # print session['selected']
         # print '####### Inside Phase ####'
         print session['available']
-        return redirect('/process')
+        app.logger.warning('Session[chemin]: %s', session['chemin'])
+        if(session['chemin']):
+            return redirect('/chemin_process')
+        else:
+            return redirect('/process')
         # result = request.form.get()
         # return(str(selectedlist))
         # return render_template("result.html",result = result)
@@ -209,11 +213,12 @@ def chemin():
         filename = sample['name']
         array = sample['data']
         app.logger.warning('Size of ODR array: %d', len(array))
-        print array
 
         # Save to file
         with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w') as outfile:
             json.dump(array, outfile)
+
+        app.logger.warning('Filename: %s', filename)
 
         # Initialize the session object with chemin data
         session['autoremove'] = False
@@ -221,6 +226,7 @@ def chemin():
         session['selected'] = phaselist.cheminPhases
         session['available'] = phaselist.availablePhases
         session['filename'] = filename
+        session['chemin'] = True
 
         x = [li['x'] for li in array]
         y = [li['y'] for li in array]
@@ -269,8 +275,7 @@ def chemin():
         bgpoly = BG
         xmin = 5
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-                   :max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
 
         Sum = calcdiff
@@ -364,7 +369,8 @@ def chemin_process():
     bgpoly = BG
     xmin = 5
     # xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
 
     Sum = calcdiff
@@ -437,7 +443,7 @@ def process():
         # Load the sample data file in userData
         # parse sample data file wrt format
         filename = uploaded_file.filename
-        session['filename'] = filename
+
         session['autoremove'] = True
 
         if uploaded_file and allowed_file(uploaded_file.filename):
@@ -445,6 +451,7 @@ def process():
             filename = secure_filename(uploaded_file.filename)
             uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'],
                                             filename))
+            session['filename'] = filename
         else:
             return 'File not supported', 400
 
