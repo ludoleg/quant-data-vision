@@ -24,6 +24,7 @@ flask-wtf = "*"
 flask-bcrypt = "*"
 flask-testing = "*"
 coverage = "*"
+flask-cors = "*"
 
 
 [requires]
