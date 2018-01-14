@@ -171,8 +171,42 @@
      name: 'Difference',
      hoverinfo: 'none'
  };
+
+ var trace5 = {
+     x: {{ angle }},
+     y: {{ mineral0 }},
+     mode: 'lines',
+     line: {
+	 width: 1
+     },
+     name: list[0][0],
+     hoverinfo: 'none'
+ };
+
+ var trace6 = {
+     x: {{ angle }},
+     y: {{ mineral1 }},
+     mode: 'lines',
+     line: {
+	 width: 1
+     },
+     name: list[1][0],
+     hoverinfo: 'none'
+ };
+
+ var trace7 = {
+     x: {{ angle }},
+     y: {{ mineral2 }},
+     mode: 'lines',
+     line: {
+	 width: 1
+     },
+     name: list[2][0],
+     hoverinfo: 'none'
+ };
+
  
- var data = [trace1, trace2, trace3, trace4];
+ var data = [trace1, trace2, trace3, trace4, trace5, trace6, trace7];
 
  var layout = {
      annotations: [
@@ -193,7 +227,7 @@
 	 showgrid: true,
 	 zeroline: true,
 	 showline: true,
-	 title: '2-theta (deg)',
+	 title: '2-\u03B8 (deg)',
 	 gridwidth: 1,
 	 zerolinecolor: '#969696',
 	 zerolinewidth: 1,

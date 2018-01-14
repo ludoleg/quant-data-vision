@@ -60,6 +60,12 @@
 </div>
     </nav>
 
+
+    <div class="container theme-showcase" role="main">
+      {% block content %}{% endblock %}
+    </div> <!-- /container -->
+
+    <footer class="footer">
     <div class="container">
       <!-- errors -->
       {% if error %}
@@ -71,12 +77,6 @@
         {{ message }}
       {% endfor %}
     </div>
-
-    <div class="container theme-showcase" role="main">
-      {% block content %}{% endblock %}
-    </div> <!-- /container -->
-
-    <footer class="footer">
       <div class="container">
         <p class="text-muted">© QAnalyze Ludo & Philippe 2016</p>
       </div>

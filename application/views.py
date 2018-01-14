@@ -308,12 +308,13 @@ def chemin():
         DBname = session['dbname']
         difdata = open(DBname, 'r').readlines()
         userData = (angle, diff)
-        results, BG, calcdiff = qxrd.Qanalyze(userData,
-                                              difdata,
-                                              selectedphases,
-                                              InstrParams,
-                                              session['autoremove'],
-                                              True)
+        # results, BG, calcdiff = qxrd.Qanalyze(userData,
+        results, BG, Sum, mineralpatterns = qxrd.Qanalyze(userData,
+                                                          difdata,
+                                                          selectedphases,
+                                                          InstrParams,
+                                                          session['autoremove'],
+                                                          True)
 
         # Re-create the subset of phases to select
         sel, ava = rebalance(results)
@@ -328,7 +329,7 @@ def chemin():
         bgpoly = BG
         xmin = 5
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                        :max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
 
         Sum = calcdiff
@@ -422,8 +423,7 @@ def chemin_process():
     bgpoly = BG
     xmin = 5
     # xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
 
     Sum = calcdiff
@@ -535,8 +535,10 @@ def process():
 
     app.logger.warning("Size of selected before QAnalyze: %d",
                        len(selectedphases))
-    results, BG, calcdiff = qxrd.Qanalyze(
+    # results, BG, calcdiff = qxrd.Qanalyze(
+    results, BG, Sum, mineralpatterns = qxrd.Qanalyze(
         userData, difdata, selectedphases, InstrParams, session['autoremove'], True)
+    app.logger.warning("Length of mineralpatterns: %d",  len(mineralpatterns))
     # print results, len(results)
     app.logger.debug("Length of BG array: %s", len(BG))
     # session['results'] = results
@@ -550,16 +552,28 @@ def process():
 
     twoT = userData[0]
     diff = userData[1]
-
-    Sum = calcdiff
-    difference_magnification = 1
-    difference = (diff - Sum) * difference_magnification
-    # print difference
-    app.logger.debug(results)
-    app.logger.debug("Done with processing")
-
     angle = twoT
     bgpoly = BG
+
+    xmin = min(angle)
+    xmax = max(angle)
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    offset = Imax / 2 * 3
+    offsetline = [offset] * len(angle)
+
+    difference_magnification = 1
+    difference = (diff - Sum) * difference_magnification
+
+    offsetdiff = difference + offset
+    # print difference
+    app.logger.warning(results)
+    app.logger.debug("Done with processing")
+
+    mineralpat0 = mineralpatterns[0] + BG
+    mineralpat1 = mineralpatterns[1] + BG
+    mineralpat2 = mineralpatterns[2] + BG
+    # print u'\u03B8'
+
     # calcdiff = calcdiff
     # csv = session_data_key.urlsafe()
     csv = 'ODR'
@@ -570,8 +584,11 @@ def process():
         'angle': angle.tolist(),
         'diff': diff.tolist(),
         'bgpoly': bgpoly.tolist(),
-        'sum': calcdiff.tolist(),
-        'difference': difference.tolist(),
+        'sum': Sum.tolist(),
+        'difference': offsetdiff.tolist(),
+        'mineral0': mineralpat0.tolist(),
+        'mineral1': mineralpat1.tolist(),
+        'mineral2': mineralpat2.tolist(),
         'url_text': csv,
         'key': 'ludo',
         'samplename': filename,

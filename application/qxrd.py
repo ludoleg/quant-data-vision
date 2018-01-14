@@ -103,18 +103,7 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
     selection: list of minerals and AMCSD #
     instrParams: dictionary with Lambda, Target, FWHMa, FWHMb,    more to come
     """
-    global code, RIR
-    #global RIR
-    global enable
-    global Thresh
-    global PatDB
-    global angle
-    global diff
-    global BG
-    global mineral
-    global I
-    global Iinit
-    global nameref
+    global code, RIR, enable, Thresh, PatDB, angle, diff, BG, mineral, I, Iinit, nameref
 
     angle, diff = userData
     angle = np.array(angle)
@@ -161,13 +150,14 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
     DB2T = DB[:, :, 0]
     DBInt = DB[:, :, 1]
     PatDB, enable = calculatePatDB(DB2T, DBInt, sigmaa, sigmab)
+    logging.info("PatDB computing time = %.3fs" % (time.time() - starttime))
 
     logging.info("PatDB computing time = %.3fs" % (time.time() - starttime))
     Thresh = setQthresh(RIR)
-    trashme = RIR
-
-    code, RIR, enable, Thresh, trashme, PatDB = CleanMineralListPatDB(trashme)
-
+    if autoremove:
+        trashme = RIR
+        code, RIR, enable, Thresh, trashme, PatDB = CleanMineralListPatDB(
+            trashme)
     if len(selection) > 0:
         initialize = True
         optimize = True
@@ -213,8 +203,9 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
         I = QrefinelstsqPatDB(Iinit, autoremove)
         logging.info("Done computing optimization")
 
-        # reorganize results by decreasing % order #########        print enable
-        code, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(I)
+        #####  reorganize results by decreasing % order #########
+        if autoremove:
+            code, RIR, enable, Thresh, I, PatDB = CleanMineralListPatDB(I)
         code, RIR, enable, Thresh, I, PatDB = sortQlistPatDB()
 
     ####    #redo DB with shorter list    #####
@@ -235,7 +226,12 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
 
     logging.info("I Lstsq computing time = %.3fs" % (time.time() - starttime))
     logging.debug(code)
-    return results, BG, Sum
+
+    mineralpatterns = PatDB
+    for i in range(0, len(I)):
+        mineralpatterns[i] = I[i] * PatDB[i]
+
+    return results, BG, Sum, mineralpatterns
 
 
 '''
@@ -444,20 +440,15 @@ def makephaselist(difdata):
 
     # loop bellow find the line positions of each beginning and end of difdata.txt
     for i in range(0, len(difdata)):
-        iv2 = 0
-        Vcell = 0
         line = difdata[i]
         if nameline:
-            namelinenum = i
             name.append(str(line[6:-2]))
             nameline = False
         if not(nameline) and ("database_code_amcsd") in line:
             code.append(int((line[27:-1])))
-
         if not(nameline) and "_END_" in line:
             endline = i
             nameline = True
-
     return name, code
 
 
@@ -468,7 +459,6 @@ def makeDB(difdata, Lambda):
     ##  2nd dimension: peak number
     ##  3rd dimension: data 2T I d H K L Multiplicity
     """
-    5
     limits_nameorder = []
     nameline = True
     codes = []
@@ -672,7 +662,7 @@ def CleanMineralListPatDB(Iloc):
             Ithresh.append(Iloc[i])
             PatDBthresh.append(PatDB[i])
     #logging.info("list cleanup computing time = %.2f" %(time.time()-t0))
-    return codethresh, RIRthresh, enablethresh, Threshthresh, Ithresh, PatDBthresh
+    return codethresh, RIRthresh, enablethresh, Threshthresh, Ithresh, np.array(PatDBthresh)
 
 
 def getKey(item):
