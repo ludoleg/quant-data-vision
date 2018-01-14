@@ -152,7 +152,6 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
     PatDB, enable = calculatePatDB(DB2T, DBInt, sigmaa, sigmab)
     logging.info("PatDB computing time = %.3fs" % (time.time() - starttime))
 
-    logging.info("PatDB computing time = %.3fs" % (time.time() - starttime))
     Thresh = setQthresh(RIR)
     if autoremove:
         trashme = RIR
