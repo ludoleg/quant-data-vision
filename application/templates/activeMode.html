@@ -4,14 +4,14 @@
   <h1>Active Mode</h1>
 </div>
 <form id="mode-entry" class="form-horizontal" role="form" method="post" action="/activeMode">
-  <input type="hidden" name="key_id" value = "{{ key }}">
+  <input type="hidden" name="key_id" value ="">
 
   <div class="form-group">
     <label class="col-lg-2 control-label" for="">Mode</label>
     <div class="col-lg-4">
       <select id="class" class="form-control" name="mode">
 	{% for mode in modes %}
-	<option value="{{ mode.key.id() }}" {% if title == mode.title %}selected{% endif %}>{{ mode.title }}</option>
+	<option value="{{ mode.id }}" {% if title == mode.title %}selected{% endif %}>{{ mode.title }}</option>
 	{% endfor %}
       </select>
     </div>                    

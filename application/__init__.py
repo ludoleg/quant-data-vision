@@ -22,8 +22,10 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
-app.logger.addHandler(logging.StreamHandler(sys.stdout))
+# app.logger.addHandler(logging.StreamHandler(sys.stdout))
+# app.logger.setLevel(logging.DEBUG)
 app.logger.setLevel(logging.INFO)
+# app.logger.setLevel(logging.WARNING)
 app.logger.info('Welcome to Qanalyze')
 
 

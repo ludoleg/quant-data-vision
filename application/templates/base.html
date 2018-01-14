@@ -46,7 +46,14 @@
         <ul class="nav navbar-nav">
 	  <!-- <li class="active"><a href="/">Home</a></li> -->
 	  <li><a href="/about">About</a></li>
-	  <li><a href="/modes">Modes</a></li>
+          <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings<span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                <li><a href="/modes">Create/Edit Modes</a></li>
+		<li class="divider"></li>
+                <li><a href="/activeMode">Select Active Mode</a></li>
+              </ul>
+          </li>
 	  <li><a href='{{ url_for('users.logout') }}'>Logout</a></li>
         </ul>
       </div><!--/.nav-collapse -->

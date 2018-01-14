@@ -45,11 +45,14 @@ def rebalance(results):
     elif session['dbname'] == 'difdata_CheMin.txt':
         db = phaselist.cheminPhases
 
+    app.logger.debug('Rebalance: dbname % s', session['dbname'])
+
     available = []
     selected = [a[0] for a in results]
     inventory = [a.split('\t') for a in db]
     name = [a[0] for a in inventory]
     code = [a[1] for a in inventory]
+    app.logger.debug(inventory)
 
     # for i in range(0, len(phaselist.rockPhases)):
     #     if selected[i] in phaselist.rockPhases[i]:
@@ -68,14 +71,16 @@ def rebalance(results):
     selected = [a[0] + '\t' + str(a[1]) for a in results]
     selected.sort()
     available.sort()
+    app.logger.debug(selected)
+    app.logger.debug(available)
     return selected, available
 
 
 @app.route('/')
 def home():
-    session['dbname'] = 'difdata-rockforming.txt'
-    session['selected'] = phaselist.rockPhases
-    session['available'] = phaselist.availablePhases
+    # session['dbname'] = 'difdata-rockforming.txt'
+    # session['selected'] = phaselist.rockPhases
+    # session['available'] = phaselist.availablePhases
     return render_template('index.html')
 
 
@@ -111,10 +116,10 @@ def phase():
         session['available'] = availlist
         session['selected'] = selectedlist
         session['autoremove'] = False
-        print '####### Inside Phase ####'
+        # print '####### Inside Phase ####'
         # print session['selected']
         # print '####### Inside Phase ####'
-        print session['available']
+        # print session['available']
         app.logger.warning('Session[chemin]: %s', session['chemin'])
         if(session['chemin']):
             return redirect('/chemin_process')
@@ -177,6 +182,54 @@ def editmodes():
         myMode.inventory = request.form['inventory']
         db.session.commit()
     return redirect(url_for('modes'))
+
+
+@app.route('/activeMode', methods=['GET', 'POST'])
+def active_mode():
+    if request.method == 'POST':
+        dict = request.form
+        for key in dict:
+            print key
+            print 'form key ' + dict[key]
+        multi_dict = request.args
+        for key in multi_dict:
+            print multi_dict.get(key)
+            print multi_dict.getlist(key)
+        mode_id = request.form['mode']
+        mode = Mode.query.get(mode_id)
+        session['mode'] = mode_id
+
+        # Assign DB
+        inventory = mode.inventory
+        # Unpack the selected inventory
+        if inventory == "cement":
+            # phaselistname = 'difdata_cement_inventory.csv'
+            session['dbname'] = 'difdata_cement.txt'
+            session['selected'] = phaselist.cementPhases
+            session['available'] = phaselist.availablePhases
+        elif inventory == "pigment":
+            # phaselistname = 'difdata_pigment_inventory.csv'
+            session['dbname'] = 'difdata_pigment.txt'
+            session['selected'] = phaselist.pigmentPhases
+            session['available'] = phaselist.availablePhases
+        elif inventory == "return ock":
+            # phaselistname = 'difdata-rockforming_inventory.csv'
+            session['dbname'] = 'difdata-rockforming.txt'
+            session['selected'] = phaselist.rockPhases
+            session['available'] = phaselist.availablePhases
+        elif inventory == "chemin":
+            # phaselistname = 'difdata_CheMin_inventory.csv'
+            session['dbname'] = 'difdata_CheMin.txt'
+            session['selected'] = phaselist.cheminPhases
+            session['available'] = phaselist.availablePhases
+        else:
+            #            logging.critical("Can't find inventory")
+            app.logger.error("Can't find inventory")
+
+        return redirect('/')
+    if request.method == 'GET':
+        myModes = db.session.query(Mode).all()
+        return render_template('activeMode.html', modes=myModes, title=ludo)
 
 
 @app.route('/odr_demo')
@@ -275,7 +328,7 @@ def chemin():
         bgpoly = BG
         xmin = 5
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                        :max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
 
         Sum = calcdiff
@@ -407,34 +460,7 @@ def chemin_process():
 
 @app.route('/process', methods=['GET', 'POST'])
 def process():
-    if request.method == 'GET':
-        inventory = request.args.get('dbinventory')
-        # Unpack the selected inventory
-        if inventory == "cement":
-            # phaselistname = 'difdata_cement_inventory.csv'
-            session['dbname'] = 'difdata_cement.txt'
-            session['selected'] = phaselist.cementPhases
-            session['available'] = phaselist.availablePhases
-        elif inventory == "pigment":
-            # phaselistname = 'difdata_pigment_inventory.csv'
-            session['dbname'] = 'difdata_pigment.txt'
-            session['selected'] = phaselist.pigmentPhases
-            session['available'] = phaselist.availablePhases
-        elif inventory == "rock":
-            # phaselistname = 'difdata-rockforming_inventory.csv'
-            session['dbname'] = 'difdata-rockforming.txt'
-            session['selected'] = phaselist.rockPhases
-            session['available'] = phaselist.availablePhases
-        elif inventory == "chemin":
-            # phaselistname = 'difdata_CheMin_inventory.csv'
-            session['dbname'] = 'difdata_CheMin.txt'
-            session['selected'] = phaselist.cheminPhases
-            session['available'] = phaselist.availablePhases
-        else:
-            #            logging.critical("Can't find inventory")
-            print "Can't find inventory"
-        print session['dbname']
-
+    # if request.method == 'GET':
     if request.method == 'POST':
         uploaded_file = request.files['rockdatafile']
         if not uploaded_file:
@@ -455,10 +481,28 @@ def process():
         else:
             return 'File not supported', 400
 
+    session['chemin'] = False
+    print session['autoremove']
+
+    # Mode setup
+    mode_id = session['mode']
+    myMode = Mode.query.get(mode_id)
+    Lambda = myMode.qlambda
+    Target = myMode.qtarget
+    FWHMa = myMode.fwhma
+    FWHMb = myMode.fwhmb
+    title = myMode.title
+    app.logger.info("Mode: %s", myMode)
+
     # Load parameters for computation
     filename = session['filename']
-    DBname = session['dbname']
+
     XRDdata = open(os.path.join('uploads', filename), 'r')
+
+    DBname = session['dbname']
+    # Load in the DB file
+    difdata = open(DBname, 'r').readlines()
+
     # Phase selection
     selectedPhases = session['selected']
     # selectedPhases = phaselist.defaultPhases
@@ -466,11 +510,6 @@ def process():
     # print(selectedPhases, file=sys.stderr)
     userData = qxrdtools.openXRD(XRDdata, filename)
     # print userData
-
-    Lambda = 0.0
-    Target = 'Co'
-    FWHMa = 0.0
-    FWHMb = 0.35
 
     # Boundaries check
     if(Lambda > 2.2 or Lambda == 0):
@@ -494,17 +533,16 @@ def process():
         code = int(code)
         selectedphases.append((name, code))
 
-    # Load in the DB file
-    difdata = open(DBname, 'r').readlines()
-
+    app.logger.warning("Size of selected before QAnalyze: %d",
+                       len(selectedphases))
     results, BG, calcdiff = qxrd.Qanalyze(
         userData, difdata, selectedphases, InstrParams, session['autoremove'], True)
     # print results, len(results)
-    print len(BG)
-    print len(calcdiff)
+    app.logger.debug("Length of BG array: %s", len(BG))
     # session['results'] = results
     sel, ava = rebalance(results)
     session['selected'] = sel
+    app.logger.debug(sel)
     session['available'] = ava
 
     # print(twoT.tolist(), file=sys.stderr)
@@ -517,11 +555,10 @@ def process():
     difference_magnification = 1
     difference = (diff - Sum) * difference_magnification
     # print difference
-    # logging.debug(results)
-    # logging.info("Done with processing")
+    app.logger.debug(results)
+    app.logger.debug("Done with processing")
 
     angle = twoT
-    # diff = diff
     bgpoly = BG
     # calcdiff = calcdiff
     # csv = session_data_key.urlsafe()
@@ -538,7 +575,7 @@ def process():
         'url_text': csv,
         'key': 'ludo',
         'samplename': filename,
-        'mode': session['dbname'],
+        'mode': myMode,
         'availablephaselist': session['available'],
         'selectedphaselist': session['selected']
     }

@@ -21,13 +21,13 @@ class Mode(db.Model):
     def __init__(self, title, qlambda, target, fwhma, fwhmb, inventory):
         self.title = title
         self.qlambda = qlambda
-        self.target = target
+        self.qtarget = target
         self.fwhma = fwhma
         self.fwhmb = fwhmb
         self.inventory = inventory
 
     def __repr__(self):
-        return '<Title %r>' % (self.title)
+        return "<Mode(title='%s', qlambda='%.2f', qtarget='%s', fwhma='%.2f', fwhmb='%.2f', inventory='%s')>" % (self.title, self.qlambda, self.qtarget, self.fwhma, self.fwhmb, self.inventory)
 
 
 class User(db.Model):
