@@ -187,14 +187,14 @@ def editmodes():
 @app.route('/activeMode', methods=['GET', 'POST'])
 def active_mode():
     if request.method == 'POST':
-        dict = request.form
-        for key in dict:
-            print key
-            print 'form key ' + dict[key]
-        multi_dict = request.args
-        for key in multi_dict:
-            print multi_dict.get(key)
-            print multi_dict.getlist(key)
+        # dict = request.form
+        # for key in dict:
+        #     print key
+        #     print 'form key ' + dict[key]
+        # multi_dict = request.args
+        # for key in multi_dict:
+        #     print multi_dict.get(key)
+        #     print multi_dict.getlist(key)
         mode_id = request.form['mode']
         mode = Mode.query.get(mode_id)
         session['mode'] = mode_id
