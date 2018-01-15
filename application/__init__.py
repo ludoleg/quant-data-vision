@@ -25,8 +25,8 @@ db = SQLAlchemy(app)
 # Need to de-register the default handler since I have to enable the other handler for Heroku, otherwise entries are duplicated
 # Needed for Heroku
 app.logger.addHandler(logging.StreamHandler(sys.stdout))
-# app.logger.setLevel(logging.DEBUG)
-app.logger.setLevel(logging.INFO)
+app.logger.setLevel(logging.DEBUG)
+# app.logger.setLevel(logging.INFO)
 # app.logger.setLevel(logging.WARNING)
 app.logger.info('Welcome to Qanalyze')
 
