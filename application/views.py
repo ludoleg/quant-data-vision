@@ -267,6 +267,7 @@ def chemin():
         array = sample['data']
         odr_phases = data['phases']
         app.logger.warning('Size of ODR array: %d', len(array))
+        app.logger.debug(sample)
         app.logger.warning('Size of ODR phases: %d', len(odr_phases))
         app.logger.warning('ODR Phases: %s', odr_phases)
 
