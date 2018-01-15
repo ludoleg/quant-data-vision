@@ -265,7 +265,10 @@ def chemin():
         sample = data['sample']
         filename = sample['name']
         array = sample['data']
+        odr_phases = data['phases']
         app.logger.warning('Size of ODR array: %d', len(array))
+        app.logger.warning('Size of ODR phases: %d', len(odr_phases))
+        app.logger.warning('ODR Phases: %s', odr_phases)
 
         # Save to file
         with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w') as outfile:
@@ -327,35 +330,45 @@ def chemin():
         diff = userData[1]
         angle = twoT
         bgpoly = BG
-        xmin = 5
+        xmin = min(angle)
+        xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+                   :max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
+        offsetline = [offset] * len(angle)
 
-        Sum = calcdiff
         difference_magnification = 1
         difference = (diff - Sum) * difference_magnification
         # logging.debug(results)
         # logging.info("Done with processing")
-        difference = difference + offset
+        offsetdiff = difference + offset
 
         csv = 'ODR'
         app.logger.warning('Length of angle array: %d', len(angle))
+        mineralpat0 = mineralpatterns[0] + BG
+        mineralpat1 = mineralpatterns[1] + BG
+        mineralpat2 = mineralpatterns[2] + BG
 
         session['results'] = results
         session['filename'] = filename
+
+        defaultMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin')
 
         template_vars = {
             'phaselist': results,
             'angle': angle.tolist(),
             'diff': diff.tolist(),
             'bgpoly': bgpoly.tolist(),
-            'sum': calcdiff.tolist(),
-            'difference': difference.tolist(),
+            'sum': Sum.tolist(),
+            'difference': offsetdiff.tolist(),
+            'mineral0': mineralpat0.tolist(),
+            'mineral1': mineralpat1.tolist(),
+            'mineral2': mineralpat2.tolist(),
             'url_text': csv,
             'key': 'chemin',
             'samplename': filename,
-            'mode': 'Chemin-ODR',
+            'mode': defaultMode,
             'availablephaselist': session['available'],
             'selectedphaselist': session['selected']
         }
@@ -403,12 +416,12 @@ def chemin_process():
     DBname = session['dbname']
     difdata = open(DBname, 'r').readlines()
     userData = (angle, diff)
-    results, BG, calcdiff = qxrd.Qanalyze(userData,
-                                          difdata,
-                                          selectedphases,
-                                          InstrParams,
-                                          session['autoremove'],
-                                          True)
+    results, BG, Sum, mineralpatterns = qxrd.Qanalyze(userData,
+                                                      difdata,
+                                                      selectedphases,
+                                                      InstrParams,
+                                                      session['autoremove'],
+                                                      True)
 
     # Re-create the subset of phases to select
     sel, ava = rebalance(results)
@@ -421,20 +434,24 @@ def chemin_process():
     diff = userData[1]
     angle = twoT
     bgpoly = BG
-    xmin = 5
-    # xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
+    xmin = min(angle)
+    xmax = max(angle)
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
+    offsetline = [offset] * len(angle)
 
-    Sum = calcdiff
     difference_magnification = 1
     difference = (diff - Sum) * difference_magnification
     # logging.debug(results)
     # logging.info("Done with processing")
-    difference = difference + offset
+    offsetdiff = difference + offset
 
     csv = 'ODR'
     app.logger.warning('Length of angle array: %d', len(angle))
+    mineralpat0 = mineralpatterns[0] + BG
+    mineralpat1 = mineralpatterns[1] + BG
+    mineralpat2 = mineralpatterns[2] + BG
 
     session['results'] = results
 
@@ -443,12 +460,15 @@ def chemin_process():
         'angle': angle.tolist(),
         'diff': diff.tolist(),
         'bgpoly': bgpoly.tolist(),
-        'sum': calcdiff.tolist(),
-        'difference': difference.tolist(),
+        'sum': Sum.tolist(),
+        'difference': offsetdiff.tolist(),
+        'mineral0': mineralpat0.tolist(),
+        'mineral1': mineralpat1.tolist(),
+        'mineral2': mineralpat2.tolist(),
         'url_text': csv,
-        'key': 'ludo',
+        'key': 'chemin',
         'samplename': filename,
-        'mode': session['dbname'],
+        'mode': 'Chemin-ODR',
         'availablephaselist': session['available'],
         'selectedphaselist': session['selected']
     }
@@ -557,7 +577,8 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
