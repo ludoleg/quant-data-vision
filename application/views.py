@@ -212,7 +212,7 @@ def active_mode():
             session['dbname'] = 'difdata_pigment.txt'
             session['selected'] = phaselist.pigmentPhases
             session['available'] = phaselist.availablePhases
-        elif inventory == "return ock":
+        elif inventory == "rockforming":
             # phaselistname = 'difdata-rockforming_inventory.csv'
             session['dbname'] = 'difdata-rockforming.txt'
             session['selected'] = phaselist.rockPhases
@@ -334,8 +334,7 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-                   :max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -437,8 +436,7 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -492,6 +490,37 @@ def process():
         filename = uploaded_file.filename
 
         session['autoremove'] = True
+
+        # Need to reset all phases as we are dealing with new file
+        mode_id = session['mode']
+        mode = Mode.query.get(mode_id)
+
+        # Assign DB
+        inventory = mode.inventory
+        # Unpack the selected inventory
+        if inventory == "cement":
+            # phaselistname = 'difdata_cement_inventory.csv'
+            session['dbname'] = 'difdata_cement.txt'
+            session['selected'] = phaselist.cementPhases
+            session['available'] = phaselist.availablePhases
+        elif inventory == "pigment":
+            # phaselistname = 'difdata_pigment_inventory.csv'
+            session['dbname'] = 'difdata_pigment.txt'
+            session['selected'] = phaselist.pigmentPhases
+            session['available'] = phaselist.availablePhases
+        elif inventory == "rockforming":
+            # phaselistname = 'difdata-rockforming_inventory.csv'
+            session['dbname'] = 'difdata-rockforming.txt'
+            session['selected'] = phaselist.rockPhases
+            session['available'] = phaselist.availablePhases
+        elif inventory == "chemin":
+            # phaselistname = 'difdata_CheMin_inventory.csv'
+            session['dbname'] = 'difdata_CheMin.txt'
+            session['selected'] = phaselist.cheminPhases
+            session['available'] = phaselist.availablePhases
+        else:
+            #            logging.critical("Can't find inventory")
+            app.logger.error("Can't find inventory")
 
         if uploaded_file and allowed_file(uploaded_file.filename):
             # Make a valid version of filename for any file ystem
@@ -578,8 +607,7 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
