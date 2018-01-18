@@ -165,6 +165,7 @@ def createmodes():
                     fwhmb, inventory, current_user.id)
         db.session.add(mode)
         db.session.commit()
+        session['mode'] = mode.id
         return redirect(url_for('modes'))
 
 
