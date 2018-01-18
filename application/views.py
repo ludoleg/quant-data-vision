@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 
 from application import app
 
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 import numpy as np
 import StringIO
@@ -89,23 +89,6 @@ def about():
     return render_template('about.html')
 
 
-@app.route('/modes', methods=['GET', 'POST'])
-@login_required
-def modes():
-    if request.method == 'GET':
-        myModes = db.session.query(Mode).all()
-        # myModes = Mode.query.all()
-        return render_template('modes.html', modes=myModes)
-    if request.method == 'POST':
-        modes_ids = request.form.getlist('mode_id', type=int)
-        print modes_ids
-        for id in modes_ids:
-            m = Mode.query.get(id)
-            db.session.delete(m)
-        db.session.commit()
-        return redirect(url_for('modes'))
-
-
 @app.route('/phase', methods=['GET', 'POST'])
 def phase():
     if request.method == 'POST':
@@ -146,11 +129,32 @@ def phase():
     # return return_str
 
 
+@app.route('/modes', methods=['GET', 'POST'])
+@login_required
+def modes():
+    if request.method == 'GET':
+        # myModes = db.session.query(Mode).filter(Mode.author_id == current_user.id)
+        myModes = db.session.query(Mode).filter_by(author_id=current_user.id)
+        # myModes = db.session.query(Mode).all()
+        # myModes = Mode.query.all()
+        return render_template('modes.html', modes=myModes)
+    if request.method == 'POST':
+        modes_ids = request.form.getlist('mode_id', type=int)
+        print modes_ids
+        for id in modes_ids:
+            m = Mode.query.get(id)
+            db.session.delete(m)
+        db.session.commit()
+        return redirect(url_for('modes'))
+
+
 @app.route('/modes/create', methods=['GET', 'POST'])
 def createmodes():
     if request.method == 'GET':
         return render_template('modesCreate.html')
     if request.method == 'POST':
+        print current_user.id
+        print current_user.name
         title = request.form['modeTitle']
         qlambda = request.form['lambda']
         target = request.form['target']
@@ -158,7 +162,7 @@ def createmodes():
         fwhmb = request.form['fwhmb']
         inventory = request.form['inventory']
         mode = Mode(title, qlambda, target, fwhma,
-                    fwhmb, inventory)
+                    fwhmb, inventory, current_user.id)
         db.session.add(mode)
         db.session.commit()
         return redirect(url_for('modes'))
@@ -228,7 +232,7 @@ def active_mode():
 
         return redirect('/')
     if request.method == 'GET':
-        myModes = db.session.query(Mode).all()
+        myModes = db.session.query(Mode).filter_by(author_id=current_user.id)
         return render_template('activeMode.html', modes=myModes, title=ludo)
 
 
@@ -479,6 +483,7 @@ def chemin_process():
 
 @app.route('/process', methods=['GET', 'POST'])
 def process():
+    defaultMode = Mode('Default', 0, 'Co', 0, 0.35, 'rockforming', None)
     # if request.method == 'GET':
     if request.method == 'POST':
         uploaded_file = request.files['rockdatafile']
@@ -492,11 +497,20 @@ def process():
         session['autoremove'] = True
 
         # Need to reset all phases as we are dealing with new file
-        mode_id = session['mode']
-        mode = Mode.query.get(mode_id)
+        # If active/registered user, we use their
+        if current_user.is_authenticated:
+            if session['mode'] is None:
+                mode = db.session.query(Mode).filter_by(
+                    author_id=current_user.id).first()
+                session['mode'] = mode.id
+            mode = Mode.query.get(session['mode'])
+            inventory = mode.inventory
+            print current_user.id, mode.inventory, mode.id
+        else:
+            session['mode'] = None
+            inventory = 'rockforming'
 
-        # Assign DB
-        inventory = mode.inventory
+            # Assign DB
         # Unpack the selected inventory
         if inventory == "cement":
             # phaselistname = 'difdata_cement_inventory.csv'
@@ -536,7 +550,11 @@ def process():
 
     # Mode setup
     mode_id = session['mode']
-    myMode = Mode.query.get(mode_id)
+    if mode_id:
+        myMode = Mode.query.get(mode_id)
+    else:
+        myMode = defaultMode
+
     Lambda = myMode.qlambda
     Target = myMode.qtarget
     FWHMa = myMode.fwhma
@@ -782,6 +800,7 @@ def server_error(e):
 
 @app.route('/ludo')
 def ludo():
+    print current_user
     return render_template(
         'ludo.html',
         data=[{'name': 'red'}, {'name': 'green'}, {'name': 'blue'}])

@@ -18,16 +18,17 @@ class Mode(db.Model):
     inventory = db.Column(db.String(64), nullable=False)
     author_id = db.Column(db.Integer, ForeignKey('users.id'))
 
-    def __init__(self, title, qlambda, target, fwhma, fwhmb, inventory):
+    def __init__(self, title, qlambda, target, fwhma, fwhmb, inventory, author_id):
         self.title = title
         self.qlambda = qlambda
         self.qtarget = target
         self.fwhma = fwhma
         self.fwhmb = fwhmb
         self.inventory = inventory
+        self.author_id = author_id
 
     def __repr__(self):
-        return "<Mode(title='%s', qlambda='%.2f', qtarget='%s', fwhma='%.2f', fwhmb='%.2f', inventory='%s')>" % (self.title, self.qlambda, self.qtarget, self.fwhma, self.fwhmb, self.inventory)
+        return "<Mode(title='%s', qlambda='%.2f', qtarget='%s', fwhma='%.2f', fwhmb='%.2f', inventory='%s'id='%d')>" % (self.title, self.qlambda, self.qtarget, self.fwhma, self.fwhmb, self.inventory, self.author_id)
 
 
 class User(db.Model):
@@ -58,4 +59,4 @@ class User(db.Model):
         return unicode(self.id)
 
     def __repr__(self):
-        return '<name {}>'.format(self.name)
+        return '<name {} id {}>'.format(self.name, self.id)

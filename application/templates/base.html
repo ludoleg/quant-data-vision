@@ -54,7 +54,9 @@
                 <li><a href="/activeMode">Select Active Mode</a></li>
               </ul>
           </li>
-	  <li><a href='{{ url_for('users.logout') }}'>Logout</a></li>
+	  <li>{% if current_user.is_authenticated %}<a href='{{ url_for('users.logout') }}'>Logout</a><{% else %}<a href='{{ url_for('users.login') }}'>Login</a>{% endif %}</li>
+	  <li><a href='{{ url_for('users.register') }}'>Register</a></li>
+          <li>{% if current_user.is_authenticated %}{{ current_user.name }}{% endif %}</li>
         </ul>
       </div><!--/.nav-collapse -->
 </div>

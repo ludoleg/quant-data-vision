@@ -1,7 +1,7 @@
 #################
 #### imports ####
 #################
-from flask import flash, redirect, render_template, request, url_for, Blueprint
+from flask import flash, redirect, render_template, request, url_for, Blueprint, session
 from flask_login import login_user, login_required, logout_user
 from forms import LoginForm, RegisterForm
 from application.models import User, bcrypt
@@ -34,6 +34,7 @@ def login():
             ):
                 # session['logged_in'] = True
                 login_user(user)
+                session['mode'] = None
                 flash('You were logged in. Go Crazy.')
                 return redirect(url_for('modes'))
 
