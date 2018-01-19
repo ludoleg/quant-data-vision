@@ -607,18 +607,23 @@ def process():
             if session['mode'] is None:
                 mode = db.session.query(Mode).filter_by(
                     author_id=current_user.id).first()
-                session['mode'] = mode.id
-            mode = Mode.query.get(session['mode'])
-            inventory = mode.inventory
-            print current_user.id, mode.inventory, mode.id
+                if mode is None:
+                    mode = defaultMode
+                else:
+                    session['mode'] = mode.id
+                    mode = Mode.query.get(session['mode'])
+                inventory = mode.inventory
+                print current_user.id, mode.inventory, mode.id
         else:
             session['mode'] = None
             inventory = 'rockforming'
 
         # Assign DB
         # Unpack the selected inventory
-        print session['selected']
-        if not session['selected']:
+
+        if 'selected' in session:
+            print session['selected']
+        else:
             InitPhases(inventory)
 
         if uploaded_file and allowed_file(uploaded_file.filename):
