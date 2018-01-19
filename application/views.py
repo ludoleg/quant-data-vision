@@ -1,4 +1,4 @@
-from flask import request, render_template, url_for, session, make_response, redirect, logging, json
+from flask import request, render_template, url_for, session, make_response, redirect, logging, json, flash
 from werkzeug.utils import secure_filename
 
 from application import app
@@ -34,6 +34,25 @@ if not os.path.isdir(UPLOAD_DIR):
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
 
+def rebal(selected, inventory):
+    db = []
+    if inventory == "cement":
+        db = phaselist.cementPhases
+    elif inventory == "pigment":
+        db = phaselist.pigmentPhases
+    elif inventory == "rockforming":
+        db = phaselist.rockPhases
+    elif inventory == "chemin":
+        db = phaselist.cheminPhases
+    available = [x for x in db if x not in selected]
+    print 'Rebal'
+    print db.sort()
+    print selected.sort()
+    app.logger.debug(available)
+    print available.sort()
+    return available
+
+
 def rebalance(results):
     # Get the base list
     if session['dbname'] == 'difdata_cement.txt':
@@ -68,7 +87,7 @@ def rebalance(results):
     for i in range(len(name)):
         available.append(name[i] + '\t' + code[i])
 
-    selected = [a[0] + '\t' + str(a[1]) for a in results]
+    selected = [a[0] + '\t' + str(a[1]).zfill(6) for a in results]
     selected.sort()
     available.sort()
     app.logger.debug(selected)
@@ -87,6 +106,31 @@ def home():
 @app.route('/about')
 def about():
     return render_template('about.html')
+
+
+@app.route('/setphase', methods=['GET', 'POST'])
+def setphase():
+    if request.method == 'GET':
+        if session['mode']:
+            mode = Mode.query.get(session['mode'])
+        else:
+            mode = db.session.query(Mode).filter_by(
+                author_id=current_user.id).first()
+            if mode is None:
+                flash('Please create a mode!')
+                return redirect('modes')
+            else:
+                flash('Please select a mode!')
+                return redirect('activeMode')
+        print mode.inventory
+        # ava = rebal(session['selected'], mode.inventory)
+        ava = rebal([], mode.inventory)
+        template_vars = {
+            'availablephaselist': ava,
+            'selectedphaselist': '',
+            'mode': mode
+        }
+    return render_template('phase.html', **template_vars)
 
 
 @app.route('/phase', methods=['GET', 'POST'])
@@ -112,6 +156,40 @@ def phase():
         # return(str(selectedlist))
         # return render_template("result.html",result = result)
     else:
+        if session['mode']:
+            mode = Mode.query.get(session['mode'])
+            inventory = mode.inventory
+        else:
+            inventory = 'rockforming'
+
+        if inventory == "cement":
+            # phaselistname = 'difdata_cement_inventory.csv'
+            session['dbname'] = 'difdata_cement.txt'
+            session['selected'] = []
+            phaselist.cementPhases.sort()
+            session['available'] = phaselist.cementPhases
+        elif inventory == "pigment":
+            # phaselistname = 'difdata_pigment_inventory.csv'
+            session['dbname'] = 'difdata_pigment.txt'
+            session['selected'] = []
+            phaselist.pigmentPhases.sort()
+            session['available'] = phaselist.pigmentPhases
+        elif inventory == "rockforming":
+            # phaselistname = 'difdata-rockforming_inventory.csv'
+            session['dbname'] = 'difdata-rockforming.txt'
+            session['selected'] = []
+            phaselist.rockPhases.sort()
+            session['available'] = phaselist.rockPhases
+        elif inventory == "chemin":
+            # phaselistname = 'difdata_CheMin_inventory.csv'
+            session['dbname'] = 'difdata_CheMin.txt'
+            session['selected'] = []
+            phaselist.cheminPhases.sort()
+            session['available'] = phaselist.cheminPhases
+        else:
+            #            logging.critical("Can't find inventory")
+            app.logger.error("Can't find inventory")
+
         # mode = QuantModeModel()
         # print(mode, file=sys.stderr)
         # session['mode'] = mode
@@ -119,7 +197,7 @@ def phase():
         template_vars = {
             'availablephaselist': session['available'],
             'selectedphaselist': session['selected'],
-            'mode': session['dbname']
+            'mode': mode
         }
         return render_template('phase.html', **template_vars)
 
@@ -339,7 +417,7 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                        :max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -441,7 +519,7 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -482,6 +560,32 @@ def chemin_process():
 # [START process]
 
 
+def InitPhases(inventory):
+    if inventory == "cement":
+        # phaselistname = 'difdata_cement_inventory.csv'
+        session['dbname'] = 'difdata_cement.txt'
+        session['selected'] = phaselist.cementPhases
+        session['available'] = phaselist.availablePhases
+    elif inventory == "pigment":
+        # phaselistname = 'difdata_pigment_inventory.csv'
+        session['dbname'] = 'difdata_pigment.txt'
+        session['selected'] = phaselist.pigmentPhases
+        session['available'] = phaselist.availablePhases
+    elif inventory == "rockforming":
+        # phaselistname = 'difdata-rockforming_inventory.csv'
+        session['dbname'] = 'difdata-rockforming.txt'
+        session['selected'] = phaselist.rockPhases
+        session['available'] = phaselist.availablePhases
+    elif inventory == "chemin":
+        # phaselistname = 'difdata_CheMin_inventory.csv'
+        session['dbname'] = 'difdata_CheMin.txt'
+        session['selected'] = phaselist.cheminPhases
+        session['available'] = phaselist.availablePhases
+    else:
+        #            logging.critical("Can't find inventory")
+        app.logger.error("Can't find inventory")
+
+
 @app.route('/process', methods=['GET', 'POST'])
 def process():
     defaultMode = Mode('Default', 0, 'Co', 0, 0.35, 'rockforming', None)
@@ -511,31 +615,11 @@ def process():
             session['mode'] = None
             inventory = 'rockforming'
 
-            # Assign DB
+        # Assign DB
         # Unpack the selected inventory
-        if inventory == "cement":
-            # phaselistname = 'difdata_cement_inventory.csv'
-            session['dbname'] = 'difdata_cement.txt'
-            session['selected'] = phaselist.cementPhases
-            session['available'] = phaselist.availablePhases
-        elif inventory == "pigment":
-            # phaselistname = 'difdata_pigment_inventory.csv'
-            session['dbname'] = 'difdata_pigment.txt'
-            session['selected'] = phaselist.pigmentPhases
-            session['available'] = phaselist.availablePhases
-        elif inventory == "rockforming":
-            # phaselistname = 'difdata-rockforming_inventory.csv'
-            session['dbname'] = 'difdata-rockforming.txt'
-            session['selected'] = phaselist.rockPhases
-            session['available'] = phaselist.availablePhases
-        elif inventory == "chemin":
-            # phaselistname = 'difdata_CheMin_inventory.csv'
-            session['dbname'] = 'difdata_CheMin.txt'
-            session['selected'] = phaselist.cheminPhases
-            session['available'] = phaselist.availablePhases
-        else:
-            #            logging.critical("Can't find inventory")
-            app.logger.error("Can't find inventory")
+        print session['selected']
+        if not session['selected']:
+            InitPhases(inventory)
 
         if uploaded_file and allowed_file(uploaded_file.filename):
             # Make a valid version of filename for any file ystem
@@ -626,7 +710,7 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
