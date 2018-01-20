@@ -126,8 +126,8 @@ def setphase():
         # This will reset the starting line up for the phases
         ava = rebal([], mode.inventory)
         template_vars = {
-            'availablephaselist': ava,
-            'selectedphaselist': '',
+            'availablephaselist': '',
+            'selectedphaselist': ava,
             'mode': mode
         }
     return render_template('phase.html', **template_vars)
