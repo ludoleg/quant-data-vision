@@ -25,7 +25,6 @@ ALLOWED_EXTENSIONS = set(['txt', 'plv', 'csv', 'mdi', 'dif'])
 UPLOAD_DIR = 'uploads'
 
 import os
-from datetime import timedelta
 
 app.config.from_object(os.environ['APP_SETTINGS'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_DIR
@@ -35,11 +34,6 @@ if not os.path.isdir(UPLOAD_DIR):
 
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
-@app.before_request
-def make_session_permanent():
-    session.permanent = True
-    app.permanent_session_lifetime = timedelta(minutes=5)
-
 
 def rebal(selected, inventory):
     if inventory == "cement":
@@ -155,8 +149,10 @@ def phase():
         # print session['available']
         # app.logger.warning('Session[chemin]: %s', session['chemin'])
         if 'chemin' in session:
+            app.logger.warning("Session['chemin']: %s", session['chemin'])
+        if session['chemin']:
             return redirect('/chemin_process')
-        if 'filename' in session:
+        elif 'filename' in session:
             return redirect('/process')
         else:
             return redirect('/')
@@ -425,7 +421,8 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+                   :max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -444,7 +441,7 @@ def chemin():
         session['results'] = results
         session['filename'] = filename
 
-        defaultMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin')
+        defaultMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin', None)
 
         template_vars = {
             'phaselist': results,
@@ -527,7 +524,8 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -598,6 +596,8 @@ def InitPhases(inventory):
 @app.route('/process', methods=['GET', 'POST'])
 def process():
     defaultMode = Mode('Default', 0, 'Co', 0, 0.35, 'rockforming', None)
+    session['chemin'] = False
+
     # if request.method == 'GET':
     if request.method == 'POST':
         uploaded_file = request.files['rockdatafile']
@@ -726,8 +726,7 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
