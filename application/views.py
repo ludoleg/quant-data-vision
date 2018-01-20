@@ -25,6 +25,8 @@ ALLOWED_EXTENSIONS = set(['txt', 'plv', 'csv', 'mdi', 'dif'])
 UPLOAD_DIR = 'uploads'
 
 import os
+from datetime import timedelta
+
 app.config.from_object(os.environ['APP_SETTINGS'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_DIR
 
@@ -33,23 +35,24 @@ if not os.path.isdir(UPLOAD_DIR):
 
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=5)
+
 
 def rebal(selected, inventory):
-    db = []
     if inventory == "cement":
-        db = phaselist.cementPhases
+        db = sorted(phaselist.cementPhases)
     elif inventory == "pigment":
-        db = phaselist.pigmentPhases
+        db = sorted(phaselist.pigmentPhases)
     elif inventory == "rockforming":
-        db = phaselist.rockPhases
+        db = sorted(phaselist.rockPhases)
     elif inventory == "chemin":
-        db = phaselist.cheminPhases
+        db = sorted(phaselist.cheminPhases)
+    selected.sort()
     available = [x for x in db if x not in selected]
-    print 'Rebal'
-    print db.sort()
-    print selected.sort()
     app.logger.debug(available)
-    print available.sort()
     return available
 
 
@@ -107,6 +110,8 @@ def home():
 def about():
     return render_template('about.html')
 
+# This will reset the starting line up for the phases
+
 
 @app.route('/setphase', methods=['GET', 'POST'])
 def setphase():
@@ -122,8 +127,9 @@ def setphase():
             else:
                 flash('Please select a mode!')
                 return redirect('activeMode')
-        print mode.inventory
+        app.logger.debug("Inventory: %s", mode.inventory)
         # ava = rebal(session['selected'], mode.inventory)
+        # This will reset the starting line up for the phases
         ava = rebal([], mode.inventory)
         template_vars = {
             'availablephaselist': ava,
@@ -147,11 +153,13 @@ def phase():
         # print session['selected']
         # print '####### Inside Phase ####'
         # print session['available']
-        app.logger.warning('Session[chemin]: %s', session['chemin'])
-        if(session['chemin']):
+        # app.logger.warning('Session[chemin]: %s', session['chemin'])
+        if 'chemin' in session:
             return redirect('/chemin_process')
-        else:
+        if 'filename' in session:
             return redirect('/process')
+        else:
+            return redirect('/')
         # result = request.form.get()
         # return(str(selectedlist))
         # return render_template("result.html",result = result)
@@ -293,7 +301,7 @@ def active_mode():
         elif inventory == "pigment":
             # phaselistname = 'difdata_pigment_inventory.csv'
             session['dbname'] = 'difdata_pigment.txt'
-            session['selected'] = phaselist.pigmentPhases
+            session['selected'] = sorted(phaselist.pigmentPhases)
             session['available'] = phaselist.availablePhases
         elif inventory == "rockforming":
             # phaselistname = 'difdata-rockforming_inventory.csv'
@@ -308,7 +316,7 @@ def active_mode():
         else:
             #            logging.critical("Can't find inventory")
             app.logger.error("Can't find inventory")
-
+        app.logger.warning("session['selected'], % s", session['selected'])
         return redirect('/')
     if request.method == 'GET':
         myModes = db.session.query(Mode).filter_by(author_id=current_user.id)
@@ -326,7 +334,7 @@ def odr_post():
 
 
 # [START ODR service]
-# Duplicates /process with input from the ODR site
+# Duplicates /processwith input from the ODR site
 @app.route('/chemin', methods=['GET', 'POST'])
 def chemin():
     if request.method == 'POST':
@@ -417,7 +425,7 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                        :max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -519,7 +527,7 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -584,6 +592,7 @@ def InitPhases(inventory):
     else:
         #            logging.critical("Can't find inventory")
         app.logger.error("Can't find inventory")
+    app.logger.warning("Initphases DBname: %s", session['dbname'])
 
 
 @app.route('/process', methods=['GET', 'POST'])
@@ -610,21 +619,23 @@ def process():
                 if mode is None:
                     mode = defaultMode
                 else:
+                    mode = Mode.query.get(mode.id)
                     session['mode'] = mode.id
-                    mode = Mode.query.get(session['mode'])
                 inventory = mode.inventory
-                print current_user.id, mode.inventory, mode.id
+                InitPhases(mode.inventory)
+                # print current_user.id, mode.inventory, mode.id
         else:
             session['mode'] = None
             inventory = 'rockforming'
+            InitPhases(inventory)
+            app.logger.warning("Initializing phases...")
+            # print session['selected']
 
         # Assign DB
         # Unpack the selected inventory
 
-        if 'selected' in session:
-            print session['selected']
-        else:
-            InitPhases(inventory)
+        # if 'selected' in session:
+        #     print session['selected']
 
         if uploaded_file and allowed_file(uploaded_file.filename):
             # Make a valid version of filename for any file ystem
@@ -635,7 +646,6 @@ def process():
         else:
             return 'File not supported', 400
 
-    session['chemin'] = False
     print session['autoremove']
 
     # Mode setup
@@ -663,6 +673,7 @@ def process():
 
     # Phase selection
     selectedPhases = session['selected']
+    app.logger.warning("session['selected'], % s", session['selected'])
     # selectedPhases = phaselist.defaultPhases
     # print selectedPhases
     # print(selectedPhases, file=sys.stderr)
@@ -715,7 +726,8 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
