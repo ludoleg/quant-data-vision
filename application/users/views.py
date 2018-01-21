@@ -34,9 +34,8 @@ def login():
             ):
                 # session['logged_in'] = True
                 login_user(user)
-                session['mode'] = None
                 flash('You were logged in. Go Crazy.')
-                return redirect(url_for('modes'))
+                return redirect(url_for('home'))
 
             else:
                 error = 'Invalid username or password.'
@@ -47,6 +46,7 @@ def login():
 @login_required
 def logout():
     logout_user()
+    session.clear()
     flash('You were logged out.')
     return redirect(url_for('home'))
 
