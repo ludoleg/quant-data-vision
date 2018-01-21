@@ -175,46 +175,8 @@
      visible: 'legendonly'
  };
 
- var trace5 = {
-     x: {{ angle }},
-     y: {{ mineral0 }},
-     mode: 'lines',
-     line: {
-	 width: 1
-     },
-     name: list[0][0],
-     hoverinfo: 'none',
-     visible: 'legendonly'
- };
-
- var trace6 = {
-     x: {{ angle }},
-     y: {{ mineral1 }},
-     mode: 'lines',
-     line: {
-	 width: 1
-     },
-     name: list[1][0],
-     hoverinfo: 'none',
-     visible: 'legendonly'
- };
-
- var trace7 = {
-     x: {{ angle }},
-     y: {{ mineral2 }},
-     mode: 'lines',
-     line: {
-	 width: 1
-     },
-     name: list[2][0],
-     hoverinfo: 'none',
-     visible: 'legendonly'
-     
- };
-
+ var data = [trace1, trace2, trace3, trace4];
  
- var data = [trace1, trace2, trace3, trace4, trace5, trace6, trace7];
-
  var layout = {
      annotations: [
 	 {
@@ -229,6 +191,10 @@
 	     align: 'right'
 	 }],
      showlegend: true,
+     legend: {
+         x: 100,
+         y: 1
+     },
      title: '{{ samplename }}',
      xaxis: {
 	 showgrid: true,
@@ -258,7 +224,27 @@
      },
  };
 
- Plotly.plot(document.getElementById('xrdplot'), data, layout);
+ var minerals = {{ minerals }}
+ var update = {
+     x: {{ angle }},
+     y: '',
+     mode: 'lines',
+     line: {
+	 width: 1
+     },
+     name: '',
+     hoverinfo: 'none',
+     visible: 'legendonly'
+ };
+ 
+ Plotly.newPlot(xrdplot, data, layout);
+ //Plotly.addTraces(xrdplot, [trace4, trace5, trace6]);
+ for (var i = 0; i < list.length; i++) {
+     update.y = minerals[5]
+     update.name = list[i][0]
+     Plotly.addTraces(xrdplot, update);
+ }
+ 
 </script>
 {% endblock %}
 

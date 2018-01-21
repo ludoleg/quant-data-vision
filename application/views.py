@@ -434,9 +434,7 @@ def chemin():
 
         csv = 'ODR'
         app.logger.warning('Length of angle array: %d', len(angle))
-        mineralpat0 = mineralpatterns[0] + BG
-        mineralpat1 = mineralpatterns[1] + BG
-        mineralpat2 = mineralpatterns[2] + BG
+        minerallist = [(l + BG).tolist() for l in mineralpatterns]
 
         session['results'] = results
         session['filename'] = filename
@@ -450,9 +448,7 @@ def chemin():
             'bgpoly': bgpoly.tolist(),
             'sum': Sum.tolist(),
             'difference': offsetdiff.tolist(),
-            'mineral0': mineralpat0.tolist(),
-            'mineral1': mineralpat1.tolist(),
-            'mineral2': mineralpat2.tolist(),
+            'minerals': minerallist,
             'url_text': csv,
             'key': 'chemin',
             'samplename': filename,
@@ -537,11 +533,11 @@ def chemin_process():
 
     csv = 'ODR'
     app.logger.warning('Length of angle array: %d', len(angle))
-    mineralpat0 = mineralpatterns[0] + BG
-    mineralpat1 = mineralpatterns[1] + BG
-    mineralpat2 = mineralpatterns[2] + BG
+    minerallist = [(l + BG).tolist() for l in mineralpatterns]
 
     session['results'] = results
+
+    defaultMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin', None)
 
     template_vars = {
         'phaselist': results,
@@ -550,13 +546,11 @@ def chemin_process():
         'bgpoly': bgpoly.tolist(),
         'sum': Sum.tolist(),
         'difference': offsetdiff.tolist(),
-        'mineral0': mineralpat0.tolist(),
-        'mineral1': mineralpat1.tolist(),
-        'mineral2': mineralpat2.tolist(),
+        'minerals': minerallist,
         'url_text': csv,
         'key': 'chemin',
         'samplename': filename,
-        'mode': 'Chemin-ODR',
+        'mode': defaultMode,
         'availablephaselist': session['available'],
         'selectedphaselist': session['selected']
     }
@@ -738,10 +732,8 @@ def process():
     app.logger.warning(results)
     app.logger.debug("Done with processing")
 
-    mineralpat0 = mineralpatterns[0] + BG
-    mineralpat1 = mineralpatterns[1] + BG
-    mineralpat2 = mineralpatterns[2] + BG
-    # print u'\u03B8'
+    minerallist = [(l + BG).tolist() for l in mineralpatterns]
+    # print u'\u03B8' Theta
 
     # calcdiff = calcdiff
     # csv = session_data_key.urlsafe()
@@ -755,9 +747,7 @@ def process():
         'bgpoly': bgpoly.tolist(),
         'sum': Sum.tolist(),
         'difference': offsetdiff.tolist(),
-        'mineral0': mineralpat0.tolist(),
-        'mineral1': mineralpat1.tolist(),
-        'mineral2': mineralpat2.tolist(),
+        'minerals': minerallist,
         'url_text': csv,
         'key': 'ludo',
         'samplename': filename,
