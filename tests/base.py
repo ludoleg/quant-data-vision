@@ -13,7 +13,8 @@ class BaseTestCase(TestCase):
 
     def setUp(self):
         db.create_all()
-        db.session.add(Mode("Diffractometer", 0.0, 'Co', 0.0, 0.0, "pigment"))
+        db.session.add(Mode("Diffractometer", 0.0,
+                            'Co', 0.0, 0.0, "pigment", 1))
         db.session.add(User("admin", "ad@min.com", "admin"))
         db.session.commit()
 
