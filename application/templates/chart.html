@@ -240,7 +240,7 @@
  Plotly.newPlot(xrdplot, data, layout);
  //Plotly.addTraces(xrdplot, [trace4, trace5, trace6]);
  for (var i = 0; i < list.length; i++) {
-     update.y = minerals[5]
+     update.y = minerals[i]
      update.name = list[i][0]
      Plotly.addTraces(xrdplot, update);
  }
