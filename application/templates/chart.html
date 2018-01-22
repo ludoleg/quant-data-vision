@@ -2,7 +2,7 @@
 {% block title %}QAnalyze - XRD pattern chart{% endblock %}
 {% block content %}
 <div id="xrdplot" style="width:1200px;height:400px;"></div>
-<div class="container">
+<div id="result" class="container">
     <div class="row">
         <div class="col-lg-3">
             <h4>Mode: {{ mode.title }}</h4>
@@ -72,12 +72,9 @@
 	                {% endif %}
                     </select>
                 </div>
-            </div>
-        </div>
-        <hr>
-        <div class="row">
-            <div class="col-xs-3">
-                <button type="submit" class="btn btn-primary">Analyze</button>
+                <div class="col-xs-3">
+                    <button type="submit" class="btn btn-primary">Analyze</button>
+                </div>
             </div>
         </div>
     </form>
@@ -111,6 +108,7 @@
  }
 
  function myFunction() {
+     $("#result").hide()
      var x = document.getElementById("phaselist");
      if (x.style.display === "none") {
          x.style.display = "block";
@@ -178,18 +176,18 @@
  var data = [trace1, trace2, trace3, trace4];
  
  var layout = {
-     annotations: [
-	 {
-	     x: 0.99,
-	     y: 0.95,
-	     xref: "paper",
-	     yref: "paper",
-	     text: phases,
-	     showarrow: false,
-	     bgcolor: 'rgba(160, 236, 133, 0.7)',
-	     borderpad: 6,
-	     align: 'right'
-	 }],
+     /* annotations: [
+	{
+	x: 0.99,
+	y: 0.95,
+	xref: "paper",
+	yref: "paper",
+	text: phases,
+	showarrow: false,
+	bgcolor: 'rgba(160, 236, 133, 0.7)',
+	borderpad: 6,
+	align: 'right'
+	}],*/
      showlegend: true,
      legend: {
          x: 100,
@@ -200,7 +198,7 @@
 	 showgrid: true,
 	 zeroline: true,
 	 showline: true,
-	 title: '2-\u03B8 (deg)',
+	 title: '2\u03B8 (deg)',
 	 gridwidth: 1,
 	 zerolinecolor: '#969696',
 	 zerolinewidth: 1,
@@ -241,7 +239,7 @@
  //Plotly.addTraces(xrdplot, [trace4, trace5, trace6]);
  for (var i = 0; i < list.length; i++) {
      update.y = minerals[i]
-     update.name = list[i][0]
+     update.name = list[i][0]+' '+list[i][2]+'%'
      Plotly.addTraces(xrdplot, update);
  }
  
