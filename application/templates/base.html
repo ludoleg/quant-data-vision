@@ -56,17 +56,20 @@
                     <li><a href="/setphase">Set Initial Phases</a></li>
                 </ul>
             </li>
+            <li><a href="activeMode">Mode: {{ title.default }}</a></li>
             {% endif %}
             {% if current_user.is_authenticated %}
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Hello, {{ current_user.name }}<span class="caret"></span></a>
-                <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                    <li><a href="{{ url_for('users.logout') }}">Logout</a></li>
-                </ul>
-            </li>
+            <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Hello, {{ current_user.name }}<span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                        <li><a href="{{ url_for('users.logout') }}">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
             {% else %}
-	  <li><a href='{{ url_for('users.register') }}'>Register</a></li>
-	  <li><a href='{{ url_for('users.login') }}'>Login</a></li>
+	    <li><a href='{{ url_for('users.register') }}'>Register</a></li>
+	    <li><a href='{{ url_for('users.login') }}'>Login</a></li>
             {% endif %}
         </ul>
       </div><!--/.nav-collapse -->

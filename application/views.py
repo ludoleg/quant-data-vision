@@ -238,6 +238,13 @@ def phase():
     # return return_str
 
 
+@app.context_processor
+def notifications():
+    mode = Mode.query.get(session['mode'])
+    message = {'default': mode.title}
+    return {'title': message}
+
+
 @app.route('/modes', methods=['GET', 'POST'])
 @login_required
 def modes():
