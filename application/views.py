@@ -98,14 +98,14 @@ def home():
     # session['dbname'] = 'difdata_rockforming.txt'
     # session['selected'] = phaselist.rockPhases
     # session['available'] = phaselist.availablePhases
+    if 'mode' not in session:
+        session['mode'] = None
     if current_user.is_authenticated:
         if session['mode'] is None:
             mode = db.session.query(Mode).filter_by(
                 author_id=current_user.id).first()
             if mode:
                 session['mode'] = mode.id
-    if 'mode' not in session:
-        session['mode'] = None
         # None = default mode
         # if session.has_key('mode'):
         #    app.logger.warning("Session['mode']: %s", session['mode'])

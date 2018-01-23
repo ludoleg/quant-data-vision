@@ -17,14 +17,14 @@ class TestUser(BaseTestCase):
     def test_user_registration(self):
         with self.client:
             response = self.client.post('/register', data=dict(
-                username='Michael', email='michael@realpython.com',
+                username='ludo', email='ludoleg@pacbell.net',
                 password='python', confirm='python'
             ), follow_redirects=True)
             self.assertIn(b'QAnalyze', response.data)
-            self.assertTrue(current_user.name == "Michael")
+            self.assertTrue(current_user.name == 'ludo')
             self.assertTrue(current_user.is_active)
-            user = User.query.filter_by(email='michael@realpython.com').first()
-            self.assertTrue(str(user) == '<name Michael>')
+            user = User.query.filter_by(email='ludoleg@pacbell.net').first()
+            self.assertTrue(str(user) == '<name ludo id 2>')
 
     # Ensure errors are thrown during an incorrect user registration
     def test_incorrect_user_registration(self):
@@ -67,7 +67,7 @@ class UserViewsTests(BaseTestCase):
                 data=dict(username="admin", password="admin"),
                 follow_redirects=True
             )
-            self.assertIn(b'You were logged in', response.data)
+            self.assertIn(b'Settings', response.data)
             self.assertTrue(current_user.name == "admin")
             self.assertTrue(current_user.is_active)
 
@@ -89,7 +89,7 @@ class UserViewsTests(BaseTestCase):
                 follow_redirects=True
             )
             response = self.client.get('/logout', follow_redirects=True)
-            self.assertIn(b'You were logged out', response.data)
+            self.assertIn(b'Register', response.data)
             self.assertFalse(current_user.is_active)
 
     # Ensure that logout page requires user login
