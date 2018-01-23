@@ -16,15 +16,17 @@ class Mode(db.Model):
     fwhma = db.Column(db.Float)
     fwhmb = db.Column(db.Float)
     inventory = db.Column(db.String(64), nullable=False)
+    initial = db.Column(db.PickleType)
     author_id = db.Column(db.Integer, ForeignKey('users.id'))
 
-    def __init__(self, title, qlambda, target, fwhma, fwhmb, inventory, author_id):
+    def __init__(self, title, qlambda, target, fwhma, fwhmb, inventory, initial, author_id):
         self.title = title
         self.qlambda = qlambda
         self.qtarget = target
         self.fwhma = fwhma
         self.fwhmb = fwhmb
         self.inventory = inventory
+        self.initial = initial
         self.author_id = author_id
 
     def __repr__(self):

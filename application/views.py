@@ -33,7 +33,7 @@ if not os.path.isdir(UPLOAD_DIR):
     os.mkdir(UPLOAD_DIR)
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
-defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', '', None)
+defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
 
 
 def rebal(selected, inventory):
@@ -99,13 +99,22 @@ def home():
     # session['selected'] = phaselist.rockPhases
     # session['available'] = phaselist.availablePhases
 
+    if current_user.is_authenticated:
+        mode = db.session.query(Mode).filter_by(
+            author_id=current_user.id).first()
+        if mode is None:
+            session['mode'] = None
+        else:
+            session['mode'] = mode.id
+    else:
+        mode = None
     if not session.has_key('mode'):
         session['mode'] = None
         # None = default mode
         # if session.has_key('mode'):
         #    app.logger.warning("Session['mode']: %s", session['mode'])
     app.logger.debug(session)
-    return render_template('index.html')
+    return render_template('index.html', mode=mode)
 
 
 @app.route('/about')
@@ -118,35 +127,40 @@ def about():
 @app.route('/setphase', methods=['GET', 'POST'])
 def setphase():
     if request.method == 'POST':
+        modeid = request.form['modeid']
+        mode = Mode.query.get(modeid)
         selectedlist = request.form.getlist('selectedphase')
         availlist = request.form.getlist('availablephase')
         selectedlist.sort()
         availlist.sort()
-        session['available'] = availlist
-        session['initial'] = selectedlist
+        mode.initial = selectedlist
+        db.session.flush()
+        db.session.commit()
         session['autoremove'] = True
-        app.logger.warning("session['initial']: %s", session['initial'])
+        app.logger.warning("Mode.initial: %s", mode.initial)
         return redirect('/')
     if request.method == 'GET':
-        if session['mode']:
-            mode = Mode.query.get(session['mode'])
-        else:
-            mode = db.session.query(Mode).filter_by(
-                author_id=current_user.id).first()
-            if mode is None:
-                flash('Please create a mode!')
-                return redirect('modes')
-            else:
-                flash('Please select a mode!')
-                return redirect('activeMode')
-        app.logger.debug("Inventory: %s", mode.inventory)
+        mode = Mode.query.get(session['mode'])
+        ava = rebal(mode.initial, mode.inventory)
+      # if session['mode']:
+        #     mode = Mode.query.get(session['mode'])
+        # else:
+        #     mode = db.session.query(Mode).filter_by(
+        #         author_id=current_user.id).first()
+        #     if mode is None:
+        #         flash('Please create a mode!')
+        #         return redirect('modes')
+        #     else:
+        #         flash('Please select a mode!')
+        #         return redirect('activeMode')
+        app.logger.debug("Mode id : %s", mode.id)
+        app.logger.debug("Mode initial : %s", mode.initial)
         # ava = rebal(session['selected'], mode.inventory)
         # This will reset the starting line up for the phases
         session['autoremove'] = True
-        ava = rebal([], mode.inventory)
         template_vars = {
-            'availablephaselist': '',
-            'selectedphaselist': ava,
+            'availablephaselist': ava,
+            'selectedphaselist': mode.initial,
             'mode': mode
         }
     return render_template('setphase.html', **template_vars)
@@ -260,8 +274,21 @@ def createmodes():
         fwhma = request.form['fwhma']
         fwhmb = request.form['fwhmb']
         inventory = request.form['inventory']
+        # populate initial list
+        if inventory == "cement":
+            initial = sorted(phaselist.cementPhases)
+        elif inventory == "pigment":
+            initial = sorted(phaselist.pigmentPhases)
+        elif inventory == "rockforming":
+            initial = sorted(phaselist.rockPhases)
+        elif inventory == "chemin":
+            initial = sorted(phaselist.cheminPhases)
+        else:
+            #            logging.critical("Can't find inventory")
+            app.logger.error("Can't find inventory")
+
         mode = Mode(title, qlambda, target, fwhma,
-                    fwhmb, inventory, current_user.id)
+                    fwhmb, inventory, initial, current_user.id)
         db.session.add(mode)
         db.session.commit()
         session['mode'] = mode.id
@@ -302,38 +329,12 @@ def active_mode():
         mode_id = request.form['mode']
         mode = Mode.query.get(mode_id)
         session['mode'] = mode_id
-
-        # Assign DB
-        inventory = mode.inventory
-        # Unpack the selected inventory
-        if inventory == "cement":
-            # phaselistname = 'difdata_cement_inventory.csv'
-            session['dbname'] = 'difdata_cement.txt'
-            session['initial'] = phaselist.cementPhases
-            session['available'] = phaselist.availablePhases
-        elif inventory == "pigment":
-            # phaselistname = 'difdata_pigment_inventory.csv'
-            session['dbname'] = 'difdata_pigment.txt'
-            session['initial'] = sorted(phaselist.pigmentPhases)
-            session['available'] = phaselist.availablePhases
-        elif inventory == "rockforming":
-            # phaselistname = 'difdata-rockforming_inventory.csv'
-            session['dbname'] = 'difdata-rockforming.txt'
-            session['initial'] = phaselist.rockPhases
-            session['available'] = phaselist.availablePhases
-        elif inventory == "chemin":
-            # phaselistname = 'difdata_CheMin_inventory.csv'
-            session['dbname'] = 'difdata_CheMin.txt'
-            session['initial'] = phaselist.cheminPhases
-            session['available'] = phaselist.availablePhases
-        else:
-            #            logging.critical("Can't find inventory")
-            app.logger.error("Can't find inventory")
-        app.logger.warning("session['intial'], % s", session['initial'])
+        print mode_id, mode.id
         return redirect('/')
     if request.method == 'GET':
         myModes = db.session.query(Mode).filter_by(author_id=current_user.id)
-        return render_template('activeMode.html', modes=myModes, title=ludo)
+        current_mode = Mode.query.get(session['mode'])
+        return render_template('activeMode.html', modes=myModes, current_mode=current_mode)
 
 
 @app.route('/odr_demo')
@@ -438,8 +439,7 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-                   :max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -553,7 +553,7 @@ def chemin_process():
 
     session['results'] = results
 
-    defaultMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin', None)
+    cheminMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin', None, None)
 
     template_vars = {
         'phaselist': results,
@@ -618,15 +618,9 @@ def process():
         # parse sample data file wrt format
         filename = uploaded_file.filename
 
-        session['autoremove'] = True
-
         # Need to reset to initial as we are dealing with new file
-        if session['mode'] is None:
-            # Default case
-            inventory = defaultMode.inventory
-            InitPhases(inventory)
-        else:
-            session['selected'] = session['initial']
+        clearModeCtx()
+        loadModeCtx()
 
         if uploaded_file and allowed_file(uploaded_file.filename):
             # Make a valid version of filename for any file ystem
@@ -664,7 +658,7 @@ def process():
 
     # Phase selection
     selectedPhases = session['selected']
-    app.logger.warning("session['selected']: % s", session['selected'])
+
     # selectedPhases = phaselist.defaultPhases
     # print selectedPhases
     # print(selectedPhases, file=sys.stderr)
@@ -686,6 +680,7 @@ def process():
     InstrParams = {"Lambda": Lambda, "Target": Target,
                    "FWHMa": FWHMa, "FWHMb": FWHMb}
 
+    print session
     # Dif data captures all cristallographic data
     selectedphases = []
     for i in range(len(selectedPhases)):
@@ -701,11 +696,11 @@ def process():
     app.logger.warning("Length of mineralpatterns: %d",  len(mineralpatterns))
     # print results, len(results)
     app.logger.debug("Length of BG array: %s", len(BG))
-    session['results'] = results
+    # session['results'] = results
     sel, ava = rebalance(results)
     session['selected'] = sel
     app.logger.debug(sel)
-    session['available'] = ava
+    # session['available'] = ava
 
     # print(twoT.tolist(), file=sys.stderr)
     # print(userData, file=sys.stderr)
@@ -717,8 +712,7 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -750,7 +744,7 @@ def process():
         'key': 'ludo',
         'samplename': filename,
         'mode': myMode,
-        'availablephaselist': session['available'],
+        'availablephaselist': ava,
         'selectedphaselist': session['selected']
     }
     return render_template('chart.html', **template_vars)

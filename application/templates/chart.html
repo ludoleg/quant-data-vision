@@ -73,13 +73,34 @@
                     </select>
                 </div>
                 <div class="col-xs-3">
-                    <button type="submit" class="btn btn-primary">Analyze</button>
+                    <button id="analyze" type="submit" class="btn btn-primary">Analyze</button>
                 </div>
             </div>
         </div>
     </form>
 </div>
+<!-- Modal -->
+<div class="modal fade bs-example-modal-sm" id="myModal" role="dialog">
+    <!-- Modal content-->
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+	        <h4 class="modal-title">Processing...</h4>
+            </div>
+            <div class="modal-body">
+	        <div class="progress progress-striped active">
+	            <div class="progress-bar progress-bar-info"  role="progressbar" style="width: 100%">
+	            </div>
+	        </div>
+            </div>
+        </div>
+    </div>
+</div>
 <script>
+ $("#analyze").click(function() {
+     $("#myModal").modal()
+ });
+
  $("#btnLeft").click(function () {
      var selectedItem = $("#rightValues option:selected");
      $("#leftValues").append(selectedItem);
