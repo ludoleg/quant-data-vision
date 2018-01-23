@@ -33,6 +33,7 @@ if not os.path.isdir(UPLOAD_DIR):
     os.mkdir(UPLOAD_DIR)
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
+defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', '', None)
 
 
 def rebal(selected, inventory):
@@ -56,9 +57,9 @@ def rebalance(results):
         db = phaselist.cementPhases
     elif session['dbname'] == 'difdata_pigment.txt':
         db = phaselist.pigmentPhases
-    elif session['dbname'] == 'difdata-rockforming.txt':
+    elif session['dbname'] == 'difdata_rockforming.txt':
         db = phaselist.rockPhases
-    elif session['dbname'] == 'difdata_CheMin.txt':
+    elif session['dbname'] == 'difdata_chemin.txt':
         db = phaselist.cheminPhases
 
     app.logger.debug('Rebalance: dbname % s', session['dbname'])
@@ -94,7 +95,7 @@ def rebalance(results):
 
 @app.route('/')
 def home():
-    # session['dbname'] = 'difdata-rockforming.txt'
+    # session['dbname'] = 'difdata_rockforming.txt'
     # session['selected'] = phaselist.rockPhases
     # session['available'] = phaselist.availablePhases
 
@@ -195,14 +196,14 @@ def phase():
             phaselist.pigmentPhases.sort()
             session['available'] = phaselist.pigmentPhases
         elif inventory == "rockforming":
-            # phaselistname = 'difdata-rockforming_inventory.csv'
-            session['dbname'] = 'difdata-rockforming.txt'
+            # phaselistname = 'difdata_rockforming_inventory.csv'
+            session['dbname'] = 'difdata_rockforming.txt'
             session['selected'] = []
             phaselist.rockPhases.sort()
             session['available'] = phaselist.rockPhases
         elif inventory == "chemin":
-            # phaselistname = 'difdata_CheMin_inventory.csv'
-            session['dbname'] = 'difdata_CheMin.txt'
+            # phaselistname = 'difdata_chemin_inventory.csv'
+            session['dbname'] = 'difdata_chemin.txt'
             session['selected'] = []
             phaselist.cheminPhases.sort()
             session['available'] = phaselist.cheminPhases
@@ -382,7 +383,7 @@ def chemin():
 
         # Initialize the session object with chemin data
         session['autoremove'] = False
-        session['dbname'] = 'difdata_CheMin.txt'
+        session['dbname'] = 'difdata_chemin.txt'
         session['selected'] = phaselist.cheminPhases
         session['available'] = phaselist.availablePhases
         session['filename'] = filename
@@ -455,7 +456,7 @@ def chemin():
         session['results'] = results
         session['filename'] = filename
 
-        defaultMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin', None)
+        cheminMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin', None, None)
 
         template_vars = {
             'phaselist': results,
@@ -468,7 +469,7 @@ def chemin():
             'url_text': csv,
             'key': 'chemin',
             'samplename': filename,
-            'mode': defaultMode,
+            'mode': cheminMode,
             'availablephaselist': session['available'],
             'selectedphaselist': session['selected']
         }
@@ -565,47 +566,49 @@ def chemin_process():
         'url_text': csv,
         'key': 'chemin',
         'samplename': filename,
-        'mode': defaultMode,
+        'mode': cheminMode,
         'availablephaselist': session['available'],
         'selectedphaselist': session['selected']
     }
     return render_template('chart.html', **template_vars)
 # [END process]
 
-# [START process]
+
+def clearModeCtx():
+    session.pop('dbname', None)
+    session.pop('selected', None)
+    session.pop('autoremove', None)
+    session.pop('results', None)
 
 
-def InitPhases(inventory):
-    if inventory == "cement":
-        # phaselistname = 'difdata_cement_inventory.csv'
-        session['dbname'] = 'difdata_cement.txt'
-        session['selected'] = phaselist.cementPhases
-        session['available'] = phaselist.availablePhases
-    elif inventory == "pigment":
-        # phaselistname = 'difdata_pigment_inventory.csv'
-        session['dbname'] = 'difdata_pigment.txt'
-        session['selected'] = phaselist.pigmentPhases
-        session['available'] = phaselist.availablePhases
-    elif inventory == "rockforming":
-        # phaselistname = 'difdata-rockforming_inventory.csv'
-        session['dbname'] = 'difdata-rockforming.txt'
-        session['selected'] = phaselist.rockPhases
-        session['available'] = phaselist.availablePhases
-    elif inventory == "chemin":
-        # phaselistname = 'difdata_CheMin_inventory.csv'
-        session['dbname'] = 'difdata_CheMin.txt'
-        session['selected'] = phaselist.cheminPhases
-        session['available'] = phaselist.availablePhases
+def loadModeCtx():
+    session['autoremove'] = True
+    if current_user.is_authenticated:
+        if session['mode']:
+            mode = Mode.query.get(session['mode'])
+        else:
+            # No mode has been selected yet - should all be replaced by a function activatemode
+            mode = db.session.query(Mode).filter_by(
+                author_id=current_user.id).first()
+        print mode.initial
+        session['mode'] = mode.id
+        session['selected'] = mode.initial
+        session['dbname'] = 'difdata_' + mode.inventory + '.txt'
     else:
-        #            logging.critical("Can't find inventory")
-        app.logger.error("Can't find inventory")
-    app.logger.warning("Initphases DBname: %s", session['dbname'])
+        # if session['mode'] is None:
+        # anonymous flow
+        inventory = defaultMode.inventory
+        session['dbname'] = 'difdata_' + inventory + '.txt'
+        session['selected'] = phaselist.rockPhases
+    app.logger.warning("session['selected']: % s", session['selected'])
+
+# [START process]
 
 
 @app.route('/process', methods=['GET', 'POST'])
 def process():
     # if request.method == 'GET':
-    defaultMode = Mode('Default', 0, 'Co', 0, 0.35, 'rockforming', None)
+
     if request.method == 'POST':
         uploaded_file = request.files['rockdatafile']
         if not uploaded_file:
@@ -777,7 +780,7 @@ def odr():
         selectedphases = [(d['name'], d['AMCSD_code']) for d in phasearray]
         InstrParams = {"Lambda": 0, "Target": 'Co',
                        "FWHMa": 0.00, "FWHMb": 0.35}
-        DBname = 'difdata_CheMin.txt'
+        DBname = 'difdata_chemin.txt'
         # Dif data captures all cristallographic data
         # Load in the DB file
         difdata = open(DBname, 'r').readlines()
