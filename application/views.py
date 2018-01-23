@@ -98,23 +98,19 @@ def home():
     # session['dbname'] = 'difdata_rockforming.txt'
     # session['selected'] = phaselist.rockPhases
     # session['available'] = phaselist.availablePhases
-
     if current_user.is_authenticated:
-        mode = db.session.query(Mode).filter_by(
-            author_id=current_user.id).first()
-        if mode is None:
-            session['mode'] = None
-        else:
-            session['mode'] = mode.id
-    else:
-        mode = None
-    if not session.has_key('mode'):
+        if session['mode'] is None:
+            mode = db.session.query(Mode).filter_by(
+                author_id=current_user.id).first()
+            if mode:
+                session['mode'] = mode.id
+    if 'mode' not in session:
         session['mode'] = None
         # None = default mode
         # if session.has_key('mode'):
         #    app.logger.warning("Session['mode']: %s", session['mode'])
     app.logger.debug(session)
-    return render_template('index.html', mode=mode)
+    return render_template('index.html', mode=session['mode'])
 
 
 @app.route('/about')
@@ -326,10 +322,11 @@ def active_mode():
         # for key in multi_dict:
         #     print multi_dict.get(key)
         #     print multi_dict.getlist(key)
+        clearModeCtx()
         mode_id = request.form['mode']
         mode = Mode.query.get(mode_id)
         session['mode'] = mode_id
-        print mode_id, mode.id
+        print mode_id, mode.id, session
         return redirect('/')
     if request.method == 'GET':
         myModes = db.session.query(Mode).filter_by(author_id=current_user.id)
@@ -439,7 +436,8 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+                   :max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -537,7 +535,8 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -712,7 +711,8 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 

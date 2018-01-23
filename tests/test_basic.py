@@ -31,7 +31,16 @@ class FlaskTestCase(BaseTestCase):
         response = self.client.get('/login')
         self.assertIn(b'Please login', response.data)
 
-    # Ensure login behaves correctly with incorrect credentials
+    def test_file_process(self):
+        tester = app.test_client(self)
+        response = tester.post(
+            '/process',
+            data={'rockdatafile': 'Cumberland2.csv'},
+            follow_redirects=True
+        )
+        self.assertIn(b'AMCSD Code #', response.data)
+
+        # Ensure login behaves correctly with incorrect credentials
     def test_incorrect_login(self):
         response = self.client.post(
             '/login',
