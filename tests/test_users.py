@@ -27,14 +27,14 @@ class TestUser(BaseTestCase):
             self.assertTrue(str(user) == '<name ludo id 2>')
 
     # Ensure errors are thrown during an incorrect user registration
-    def test_incorrect_user_registration(self):
-        with self.client:
-            response = self.client.post('/register', data=dict(
-                username='Michael', email='michael',
-                password='python', confirm='python'
-            ), follow_redirects=True)
-            self.assertIn(b'Invalid email address.', response.data)
-            self.assertIn(b'/register', request.url)
+    # def test_incorrect_user_registration(self):
+    #     with self.client:
+    #         response = self.client.post('/register', data=dict(
+    #             username='Michael', email='michael',
+    #             password='python', confirm='python'
+    #         ), follow_redirects=True)
+    #         self.assertIn(b'Invalid email address.', response.data)
+    #         self.assertIn(b'/register', request.url)
 
     # Ensure id is correct for the current/logged in user
     def test_get_by_id(self):
@@ -55,30 +55,30 @@ class TestUser(BaseTestCase):
 class UserViewsTests(BaseTestCase):
 
     # Ensure that the login page loads correctly
-    def test_login_page_loads(self):
-        response = self.client.get('/login')
-        self.assertIn(b'Please login', response.data)
+    # def test_login_page_loads(self):
+    #     response = self.client.get('/login')
+    #     self.assertIn(b'Please login', response.data)
 
     # Ensure login behaves correctly with correct credentials
-    def test_correct_login(self):
-        with self.client:
-            response = self.client.post(
-                '/login',
-                data=dict(username="admin", password="admin"),
-                follow_redirects=True
-            )
-            self.assertIn(b'Settings', response.data)
-            self.assertTrue(current_user.name == "admin")
-            self.assertTrue(current_user.is_active)
+    # def test_correct_login(self):
+    #     with self.client:
+    #         response = self.client.post(
+    #             '/login',
+    #             data=dict(username="admin", password="admin"),
+    #             follow_redirects=True
+    #         )
+    #         self.assertIn(b'Settings', response.data)
+    #         self.assertTrue(current_user.name == "admin")
+    #         self.assertTrue(current_user.is_active)
 
     # Ensure login behaves correctly with incorrect credentials
-    def test_incorrect_login(self):
-        response = self.client.post(
-            '/login',
-            data=dict(username="wrong", password="wrong"),
-            follow_redirects=True
-        )
-        self.assertIn(b'Invalid username or password.', response.data)
+    # def test_incorrect_login(self):
+    #     response = self.client.post(
+    #         '/login',
+    #         data=dict(username="wrong", password="wrong"),
+    #         follow_redirects=True
+    #     )
+    #     self.assertIn(b'Invalid username or password.', response.data)
 
     # Ensure logout behaves correctly
     def test_logout(self):
@@ -93,9 +93,9 @@ class UserViewsTests(BaseTestCase):
             self.assertFalse(current_user.is_active)
 
     # Ensure that logout page requires user login
-    def test_logout_route_requires_login(self):
-        response = self.client.get('/logout', follow_redirects=True)
-        self.assertIn(b'Please log in to access this page', response.data)
+    # def test_logout_route_requires_login(self):
+    #     response = self.client.get('/logout', follow_redirects=True)
+    #     self.assertIn(b'Please log in to access this page', response.data)
 
 
 if __name__ == '__main__':
