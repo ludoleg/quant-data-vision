@@ -7,7 +7,7 @@
 <form novalidate action="/setphase"
       method="POST"
       enctype="multipart/form-data"
-      onsubmit="selectAllOptions();">
+      onsubmit="checkRightPane();">
     <div class="container">
         <div class="row">
             <div class="col-xs-3">
@@ -74,6 +74,17 @@
      });
 
      $(selectElement).empty().append( options );
+ }
+
+ function checkRightPane () {
+     if ($('#rightValues').has('option').length > 0 ) {
+         selectAllOptions();
+         $("#myModal").modal();
+     } else {
+         alert('At least one phase needs to be selected.');
+         event.preventDefault();
+         return false;  
+     }
  }
 
  function selectAllOptions()
