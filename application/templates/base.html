@@ -48,15 +48,14 @@
 	    <li><a href="/about">About</a></li>
             {% if current_user.is_authenticated %}
             <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings<span class="caret"></span></a>
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"activeMode">Active Mode: {{ title.default }}<span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                    <li><a href="/modes">Create/Edit Modes</a></li>
-                    <li><a href="/activeMode">Select Active Mode</a></li>
-		    <li class="divider"></li>
+                    <li><a href="/activeMode">Change Active Mode</a></li>
                     <li><a href="/setphase">Set Initial Phases</a></li>
+		    <li class="divider"></li>
+                    <li><a href="/modes">Create/Edit Modes</a></li>
                 </ul>
             </li>
-            <li><a href="activeMode">Mode: {{ title.default }}</a></li>
             {% endif %}
             {% if current_user.is_authenticated %}
             <ul class="nav navbar-nav">
