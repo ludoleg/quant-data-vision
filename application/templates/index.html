@@ -4,13 +4,13 @@
   <h3>Diffraction Diagram</h3>
 </div>
 <p>
-{% if not mode %}
-  {% if current_user.is_authenticated %}
-<div class="alert alert-success">
-  <strong>Info!</strong> You need to create a <a href="/modes/create" class="alert-link">mode</a> to start.
-</div>
-{% endif %}
-{% endif %}
+  {% if current_user.is_authenticated and not mode %}
+<div class="alert alert-danger" role="alert">
+  <h4 class="alert-heading">No mode available</h4>
+  <p>You need to create a mode before you can analyze samples.</p>
+  <hr>
+  <p class="mb-0">Please visit <a href="/modes/create" class="alert-link">modes</a> to start.</p>
+{% else %}
 <div class="container" id="staticimg">
   <form action="/process"
       method="POST"
@@ -19,6 +19,7 @@
     <input id="uploadFile" type="file" name="rockdatafile" style="display: none;"/>
   </form>
 </div>
+{% endif %}
 <!-- Modal -->
 <div class="modal fade bs-example-modal-sm" id="myModal" role="dialog">
   <!-- Modal content-->

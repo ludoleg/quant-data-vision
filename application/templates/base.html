@@ -50,8 +50,13 @@
             <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"activeMode">Active Mode: {{ title.default }}<span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                    {% if title.default %}
                     <li><a href="/activeMode">Change Active Mode</a></li>
                     <li><a href="/setphase">Set Initial Phases</a></li>
+                    {% else %}
+                    <li class="disabled"><a href="/activeMode">Change Active Mode</a></li>
+                    <li class="disabled"><a href="/setphase">Set Initial Phases</a></li>
+                    {%endif%}
 		    <li class="divider"></li>
                     <li><a href="/modes">Create/Edit Modes</a></li>
                 </ul>
@@ -73,24 +78,29 @@
         </ul>
       </div><!--/.nav-collapse -->
     </nav>
-
-
     <div class="container theme-showcase" role="main">
-      {% block content %}{% endblock %}
+        {% block content %}{% endblock %}
     </div> <!-- /container -->
+    <div class="container">
+        <!-- errors -->
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{ error }}</p>
+        {% endif %}
+
+        <!-- messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <!-- <strong>Title</strong> --> {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}    </div>
 
     <footer class="footer">
-    <div class="container">
-      <!-- errors -->
-      {% if error %}
-        <p class="error"><strong>Error:</strong> {{ error }}</p>
-      {% endif %}
-
-      <!-- messages -->
-      {% for message in get_flashed_messages() %}
-        {{ message }}
-      {% endfor %}
-    </div>
       <div class="container">
         <p class="text-muted">© QAnalyze Ludo & Philippe 2016</p>
       </div>
