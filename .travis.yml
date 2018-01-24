@@ -13,3 +13,8 @@ script: "python manage.py test"
 # command to run the dependencies
 # script:
 #  - "pipenv run pytest -n 8 tests"
+
+notifications:
+on_success: always
+on_failure: always
+
