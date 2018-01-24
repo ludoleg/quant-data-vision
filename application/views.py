@@ -703,7 +703,7 @@ def process():
     app.logger.warning("Length of mineralpatterns: %d",  len(mineralpatterns))
     # print results, len(results)
     app.logger.debug("Length of BG array: %s", len(BG))
-    # session['results'] = results
+    session['results'] = results
     sel, ava = rebalance(results)
     session['selected'] = sel
     app.logger.debug(sel)
