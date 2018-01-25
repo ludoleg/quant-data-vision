@@ -242,10 +242,9 @@ def phase():
 def notifications():
     if session['mode']:
         mode = Mode.query.get(session['mode'])
-#        message = {'default': mode.title}
+        message = {'default': mode.title}
     else:
         message = {'default': ''}
-    message = {'default': ''}
     return {'title': message}
 
 
@@ -319,7 +318,20 @@ def editmodes():
         myMode.qtarget = request.form['target']
         myMode.fwhma = request.form['fwhma']
         myMode.fwhmb = request.form['fwhmb']
-        myMode.inventory = request.form['inventory']
+        inventory = request.form['inventory']
+        old = request.form['oldinventory']
+        if old != inventory:
+            print request.form['inventory'], old
+            myMode.inventory = inventory
+            if inventory == "cement":
+                initial = sorted(phaselist.cementPhases)
+            elif inventory == "pigment":
+                initial = sorted(phaselist.pigmentPhases)
+            elif inventory == "rockforming":
+                initial = sorted(phaselist.rockPhases)
+            elif inventory == "chemin":
+                initial = sorted(phaselist.cheminPhases)
+            myMode.initial = initial
         db.session.commit()
     return redirect(url_for('modes'))
 
@@ -451,8 +463,7 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-                   :max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -550,8 +561,7 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -726,8 +736,7 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
