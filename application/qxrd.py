@@ -58,7 +58,7 @@ def activatephases(selection):
     enable = []
     selectedcode = []
     for i in range(0, len(selection)):
-        selectedcode.append(selection[i][1])
+        selectedcode.append(int(selection[i][1]))
 
     for i in range(0, len(code)):
         if code[i] in selectedcode:

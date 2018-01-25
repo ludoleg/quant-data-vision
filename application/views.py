@@ -242,9 +242,10 @@ def phase():
 def notifications():
     if session['mode']:
         mode = Mode.query.get(session['mode'])
-        message = {'default': mode.title}
+#        message = {'default': mode.title}
     else:
         message = {'default': ''}
+    message = {'default': ''}
     return {'title': message}
 
 
@@ -261,6 +262,8 @@ def modes():
         modes_ids = request.form.getlist('mode_id', type=int)
         print modes_ids
         for id in modes_ids:
+            if(session['mode'] == id):
+                session['mode'] = None
             m = Mode.query.get(id)
             db.session.delete(m)
         db.session.commit()
@@ -404,7 +407,7 @@ def chemin():
         diff = np.asfarray(np.array(y))
 
         # Force mode
-        Lambda = 0.0
+        Lambda = 1.79027
         Target = 'Co'
         FWHMa = 0.0
         FWHMb = 0.35
@@ -416,6 +419,7 @@ def chemin():
         # Parse phases sent by ODR
         phasearray = data['phases']
         selectedphases = [(d['name'], d['AMCSD_code']) for d in phasearray]
+
         # TODO 2nd pass with selected
 
         # Force Chemin for ODR
@@ -425,6 +429,7 @@ def chemin():
         difdata = open(DBname, 'r').readlines()
         userData = (angle, diff)
         # results, BG, calcdiff = qxrd.Qanalyze(userData,
+        print session
         results, BG, Sum, mineralpatterns = qxrd.Qanalyze(userData,
                                                           difdata,
                                                           selectedphases,
@@ -446,7 +451,8 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                        :max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+                   :max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -544,7 +550,8 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -660,7 +667,7 @@ def process():
     XRDdata = open(os.path.join('uploads', filename), 'r')
 
     DBname = session['dbname']
-    # Load in the DB file
+# Load in the DB file
     difdata = open(DBname, 'r').readlines()
 
     # Phase selection
@@ -719,7 +726,8 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
