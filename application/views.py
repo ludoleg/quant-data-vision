@@ -359,9 +359,9 @@ def active_mode():
         return render_template('activeMode.html', modes=myModes, current_mode=current_mode)
 
 
-@app.route('/odr_demo')
+@app.route('/odr_ajax')
 def odr_demo():
-    return render_template('odr_demo.html')
+    return render_template('odr_ajax.html')
 
 
 @app.route('/odr_post')
@@ -370,7 +370,8 @@ def odr_post():
 
 
 # [START ODR service]
-# Duplicates /processwith input from the ODR site
+# Duplicates /process with input from the ODR site
+# Handles both post and ajax json service mode
 @app.route('/chemin', methods=['GET', 'POST'])
 def chemin():
     if request.method == 'POST':
@@ -463,7 +464,8 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+                   :max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -561,7 +563,8 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -736,7 +739,8 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -774,71 +778,6 @@ def process():
     return render_template('chart.html', **template_vars)
 # [END process]
 
-# [START ODR service]
-
-
-@app.route('/odr', methods=['GET', 'POST'])
-def odr():
-    if request.method == 'POST':
-        # L oad data from request
-        json_data = request.get_json()
-
-        data = json_data
-        sample = data['sample']
-        filename = sample['name']
-        array = sample['data']
-
-        x = [li['x'] for li in array]
-        y = [li['y'] for li in array]
-
-        angle = np.asfarray(np.array(x))
-        diff = np.asfarray(np.array(y))
-
-        phasearray = data['phases']
-        selectedphases = [(d['name'], d['AMCSD_code']) for d in phasearray]
-        InstrParams = {"Lambda": 0, "Target": 'Co',
-                       "FWHMa": 0.00, "FWHMb": 0.35}
-        DBname = 'difdata_chemin.txt'
-        # Dif data captures all cristallographic data
-        # Load in the DB file
-        difdata = open(DBname, 'r').readlines()
-        userData = (angle, diff)
-        # print(userData)
-        results, BG, calcdiff = qxrd.Qanalyze(
-            userData, difdata, selectedphases, InstrParams)
-
-        twoT = userData[0]
-        diff = userData[1]
-
-        # logging.debug(results)
-        # logging.info("Done with processing")
-
-        angle = twoT
-        # diff = diff
-        bgpoly = BG
-        # calcdiff = calcdiff
-
-        # csv = session_data_key.urlsafe()
-        csv = 'ODR'
-        session['results'] = results
-        session['filename'] = filename
-
-        template_vars = {
-            'phaselist': results,
-            'angle': angle.tolist(),
-            'diff': diff.tolist(),
-            'bgpoly': bgpoly.tolist(),
-            'sum': calcdiff.tolist(),
-            'url_text': csv,
-            'key': 'ludo',
-            'samplename': filename,
-            'mode': 'Chemin-ODR'
-        }
-        return render_template('chart.html', **template_vars)
-    else:
-        return '''<html><body><h1>Did not get a post!</h1></body></html>'''
-# [END ODR service]
-
 
 # [START PHASE MANIP]
 @app.route('/phaseAnalysis', methods=['GET', 'POST'])
@@ -858,7 +797,7 @@ def phaseAnalysis():
 
     # return render_template('selector.html')
 
-# [START CVS]
+# [START CSV]
 
 
 @app.route('/csvDownload', methods=['GET'])

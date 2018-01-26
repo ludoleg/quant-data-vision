@@ -2,7 +2,7 @@
 #### imports ####
 #################
 from flask import flash, redirect, render_template, request, url_for, Blueprint, session
-from flask_login import login_user, login_required, logout_user
+from flask_login import login_user, login_required, logout_user, current_user
 from forms import LoginForm, RegisterForm
 from application.models import User, bcrypt
 from application import db
