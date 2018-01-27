@@ -36,6 +36,24 @@ if not os.path.isdir(UPLOAD_DIR):
 defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
 
 
+@app.context_processor
+def inject_title():
+    if not session:
+        print 'Hurray: no session'
+        title = ''
+    elif 'mode' in session:
+        print session
+        mode = Mode.query.get(session['mode'])
+        if mode:
+            title = mode.title
+            print title
+        else:
+            title = ''
+    else:
+        title = ''
+    return dict(modetitle=title)
+
+
 def rebal(selected, inventory):
     if inventory == "cement":
         db = sorted(phaselist.cementPhases)
@@ -95,22 +113,14 @@ def rebalance(results):
 
 @app.route('/')
 def home():
-    # session['dbname'] = 'difdata_rockforming.txt'
-    # session['selected'] = phaselist.rockPhases
-    # session['available'] = phaselist.availablePhases
-    if 'mode' not in session:
-        session['mode'] = None
+    modeset = False
     if current_user.is_authenticated:
-        if session['mode'] is None:
-            mode = db.session.query(Mode).filter_by(
-                author_id=current_user.id).first()
-            if mode:
-                session['mode'] = mode.id
-        # None = default mode
-        # if session.has_key('mode'):
-        #    app.logger.warning("Session['mode']: %s", session['mode'])
-    app.logger.debug(session)
-    return render_template('index.html', mode=session['mode'])
+        mode = db.session.query(Mode).filter_by(
+            author_id=current_user.id).first()
+        if mode:
+            modeset = True
+    app.logger.warning(session)
+    return render_template('index.html', modeset=modeset)
 
 
 @app.route('/about')
@@ -238,16 +248,6 @@ def phase():
     # return return_str
 
 
-@app.context_processor
-def notifications():
-    if session['mode']:
-        mode = Mode.query.get(session['mode'])
-        message = {'default': mode.title}
-    else:
-        message = {'default': ''}
-    return {'title': message}
-
-
 @app.route('/modes', methods=['GET', 'POST'])
 @login_required
 def modes():
@@ -262,7 +262,7 @@ def modes():
         print modes_ids
         for id in modes_ids:
             if(session['mode'] == id):
-                session['mode'] = None
+                session.pop('mode')
             m = Mode.query.get(id)
             db.session.delete(m)
         db.session.commit()

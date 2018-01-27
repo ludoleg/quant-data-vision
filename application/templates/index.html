@@ -4,7 +4,7 @@
   <h3>Diffraction Diagram</h3>
 </div>
 <p>
-  {% if current_user.is_authenticated and not mode %}
+  {% if current_user.is_authenticated and not modeset %}
 <div class="alert alert-danger" role="alert">
   <h4 class="alert-heading">No mode available</h4>
   <p>You need to create a mode before you can analyze samples.</p>

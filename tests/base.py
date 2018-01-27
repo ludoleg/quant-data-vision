@@ -13,9 +13,10 @@ class BaseTestCase(TestCase):
 
     def setUp(self):
         db.create_all()
-        db.session.add(Mode("Diffractometer", 0.0,
-                            'Co', 0.0, 0.0, "pigment", "", 1))
-        db.session.add(User("admin", "ad@min.com", "admin"))
+        db.session.add(Mode("Diffractometer", 0.0, 'Co',
+                            0.0, 0.0, "pigment", "", 1))
+        db.session.add(User("user1", "ad1@min.com", "user1"))
+        db.session.add(User("user2", "ad2@min.com", "user2"))
         db.session.commit()
 
     def tearDown(self):
