@@ -18,6 +18,7 @@ notifications:
   email:
     recipients:
       - llegrand26@yahoo.com
+      - psarrazin@seti.org
     on_success: always
     on_failure: always
 
