@@ -38,18 +38,22 @@ defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
 
 @app.context_processor
 def inject_title():
-    if not session:
-        print 'Hurray: no session'
-        title = ''
-    elif 'mode' in session:
-        print session
-        mode = Mode.query.get(session['mode'])
-        if mode:
+    if current_user.is_authenticated:
+        if 'mode' in session:
+            mode = Mode.query.get(session['mode'])
             title = mode.title
-            print title
         else:
-            title = ''
+            app.logger.info('No mode has been initialized')
+            mode = db.session.query(Mode).filter_by(
+                author_id=current_user.id).first()
+            if mode:
+                session['mode'] = mode.id
+                app.logger.info('Mode has been initialized')
+                title = mode.title
+            else:
+                title = ''
     else:
+        app.logger.info('Anonymous mode')
         title = ''
     return dict(modetitle=title)
 
@@ -130,6 +134,7 @@ def about():
 # This will reset the starting line up for the phases
 
 
+@login_required
 @app.route('/setphase', methods=['GET', 'POST'])
 def setphase():
     if request.method == 'POST':
@@ -269,6 +274,7 @@ def modes():
         return redirect(url_for('modes'))
 
 
+@login_required
 @app.route('/modes/create', methods=['GET', 'POST'])
 def createmodes():
     if request.method == 'GET':
@@ -303,6 +309,7 @@ def createmodes():
         return redirect(url_for('modes'))
 
 
+@login_required
 @app.route('/modes/edit', methods=['GET', 'POST'])
 def editmodes():
     if request.method == 'GET':
@@ -336,6 +343,7 @@ def editmodes():
     return redirect(url_for('modes'))
 
 
+@login_required
 @app.route('/activeMode', methods=['GET', 'POST'])
 def active_mode():
     if request.method == 'POST':
@@ -464,7 +472,8 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+                   :max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -562,7 +571,8 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -609,7 +619,7 @@ def clearModeCtx():
 def loadModeCtx():
     session['autoremove'] = True
     if current_user.is_authenticated:
-        if session['mode']:
+        if 'mode' in session:
             mode = Mode.query.get(session['mode'])
         else:
             # No mode has been selected yet - should all be replaced by a function activatemode
@@ -620,7 +630,6 @@ def loadModeCtx():
         session['selected'] = mode.initial
         session['dbname'] = 'difdata_' + mode.inventory + '.txt'
     else:
-        # if session['mode'] is None:
         # anonymous flow
         inventory = defaultMode.inventory
         session['dbname'] = 'difdata_' + inventory + '.txt'
@@ -660,7 +669,7 @@ def process():
 
     # Mode setup
     if 'mode' in session:
-        myMode = Mode.query.get(mode_id)
+        myMode = Mode.query.get(session['mode'])
     else:
         myMode = defaultMode
 
@@ -737,7 +746,8 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 

@@ -58,6 +58,26 @@ class ModeTests(BaseTestCase):
                 self.assertIn(b'AMCSD', response.data)
                 self.assertIn(b'Database: rockforming', response.data)
 
+    def test_process_logged(self):
+        data = {}
+        with open('Cumberland2.csv', 'rb') as f:
+            data['rockdatafile'] = (f, f.name)
+            with self.client:
+                self.client.post(
+                    '/login',
+                    data=dict(username="user1", password="user1"),
+                    follow_redirects=True
+                )
+                response = self.client.post(
+                    '/process', buffered=True,
+                    content_type='multipart/form-data',
+                    data=data, follow_redirects=True
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(b'Cumberland2', response.data)
+                self.assertIn(b'AMCSD', response.data)
+                self.assertIn(b'Database: pigment', response.data)
+
     def test_user_can_create_mode(self):
         with self.client:
             self.client.post(
@@ -69,6 +89,19 @@ class ModeTests(BaseTestCase):
                 '/modes/create')
             self.assertEqual(response.status_code, 200)
             self.assertIn(b'Create Mode',
+                          response.data)
+
+    def test_user_active_mode(self):
+        with self.client:
+            self.client.post(
+                '/login',
+                data=dict(username="user1", password="user1"),
+                follow_redirects=True
+            )
+            response = self.client.get(
+                '/activeMode')
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(b'Active Mode',
                           response.data)
 
     def test_no_mode(self):
