@@ -3231,13 +3231,15 @@ _END_
       European Journal of Mineralogy 8 (1996) 103-113
       29Si MAS NMR spectrum and superstructure of modulated tridymite L3-To(MX-1)
       Sample: average crystal structure
-      Locality: synthetic
       _database_code_amcsd 0006616
 
       CELL PARAMETERS:   5.0070  8.6004  8.2169   90.000   91.512   90.000
-      SPACE GROUP: Cc        
+      SPACE GROUP: Cc
       X-RAY WAVELENGTH:     1.541838
-      MAX. ABS. INTENSITY / VOLUME**2:      10.91049085    
+      CELL VOLUME:     353.715
+      DENSITY (gm/cm3):     2.257
+      CHEMICAL FORMULA: Si O2
+      MAX. ABS. INTENSITY / VOLUME**2:      10.91049085
                2-THETA      INTENSITY    D-SPACING   H   K   L   Multiplicity
                 20.53        100.00        4.3260    1   1   0         2
                 20.66         45.53        4.3002    0   2   0         2
