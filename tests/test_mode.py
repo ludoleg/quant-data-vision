@@ -3,6 +3,7 @@
 import unittest
 
 from base import BaseTestCase
+from StringIO import StringIO
 
 
 class ModeTests(BaseTestCase):
@@ -41,6 +42,21 @@ class ModeTests(BaseTestCase):
             self.assertEqual(response.status_code, 200)
             self.assertIn(b'Analysis Modes',
                           response.data)
+
+    def test_user_anonymous(self):
+        data = {}
+        with open('Cumberland2.csv', 'rb') as f:
+            data['rockdatafile'] = (f, f.name)
+            with self.client:
+                response = self.client.post(
+                    '/process', buffered=True,
+                    content_type='multipart/form-data',
+                    data=data, follow_redirects=True
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(b'Cumberland2', response.data)
+                self.assertIn(b'AMCSD', response.data)
+                self.assertIn(b'Database: rockforming', response.data)
 
     def test_user_can_create_mode(self):
         with self.client:
