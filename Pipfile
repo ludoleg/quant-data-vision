@@ -25,6 +25,7 @@ flask-bcrypt = "*"
 flask-testing = "*"
 coverage = "*"
 flask-cors = "*"
+flask-bootstrap = "*"
 
 
 [requires]
