@@ -15,10 +15,7 @@ script: "python manage.py test"
 #  - "pipenv run pytest -n 8 tests"
 
 notifications:
-  email:
-    recipients:
-      - llegrand26@yahoo.com
-      - psarrazin@seti.org
+  slack: plquant:LVZ74IbPwglpPUs1CQF8jKnl
     on_success: always
     on_failure: always
-  slack: plquant:LVZ74IbPwglpPUs1CQF8jKnl
+  
