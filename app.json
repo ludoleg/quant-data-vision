@@ -1,0 +1,33 @@
+{
+  "name": "quant-data-vision",
+  "scripts": {
+  },
+  "env": {
+    "APP_SETTINGS": {
+      "required": true
+    },
+    "HEROKU_POSTGRESQL_JADE_URL": {
+      "required": true
+    },
+    "PAPERTRAIL_API_TOKEN": {
+      "required": true
+    },
+    "TZ": {
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+    "papertrail",
+    "heroku-postgresql"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}
