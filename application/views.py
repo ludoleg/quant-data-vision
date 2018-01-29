@@ -91,7 +91,6 @@ def rebalance(results):
     inventory = [a.split('\t') for a in db]
     name = [a[0] for a in inventory]
     code = [a[1] for a in inventory]
-    app.logger.debug(inventory)
 
     # for i in range(0, len(phaselist.rockPhases)):
     #     if selected[i] in phaselist.rockPhases[i]:
@@ -110,8 +109,10 @@ def rebalance(results):
     selected = [a[0] + '\t' + str(a[1]).zfill(6) for a in results]
     selected.sort()
     available.sort()
-    app.logger.debug(selected)
-    # app.logger.debug(available)
+    app.logger.debug("*********** Rebalance ** *********")
+    app.logger.debug("Inventory %s", inventory)
+    app.logger.debug("Selected %s", selected)
+    app.logger.debug("Available %s", available)
     return selected, available
 
 
@@ -635,7 +636,8 @@ def loadModeCtx():
         inventory = defaultMode.inventory
         session['dbname'] = 'difdata_' + inventory + '.txt'
         session['selected'] = phaselist.rockPhases
-    app.logger.warning("session['selected']: % s", session['selected'])
+    app.logger.warning(
+        "loadModeCtx session['selected']: % s", session['selected'])
 
 # [START process]
 

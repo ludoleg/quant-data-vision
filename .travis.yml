@@ -21,4 +21,4 @@ notifications:
       - psarrazin@seti.org
     on_success: always
     on_failure: always
-
+  slack: plquant:LVZ74IbPwglpPUs1CQF8jKnl
