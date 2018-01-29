@@ -3,6 +3,7 @@
 #################
 
 from flask import Flask
+from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
@@ -16,6 +17,7 @@ import sys
 ################
 
 app = Flask(__name__)
+bootstrap = Bootstrap(app)
 CORS(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager()
