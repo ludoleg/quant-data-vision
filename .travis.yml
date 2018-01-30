@@ -16,6 +16,3 @@ script: "python manage.py test"
 
 notifications:
   slack: plquant:LVZ74IbPwglpPUs1CQF8jKnl
-    on_success: always
-    on_failure: always
-  
