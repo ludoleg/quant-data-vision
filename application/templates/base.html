@@ -7,7 +7,11 @@
     <meta name="description" content="XRD.Qanalyze is an automated cloud-based application for quantitative analysis of mineral samples using X-ray diffraction (XRD) data">
     <meta name="author" content="Ludovic Legrand">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    {% if title %}
+    <title>{{ title }} - QAnalyze</title>
+    {% else %}
     <title>QAnalyze: Mineral analysis using X-Ray Diffraction data</title>
+    {% endif %}
 
     <!-- Bootstrap core CSS -->
     <!-- Latest compiled and minified CSS -->
@@ -73,7 +77,6 @@
                 </li>
             </ul>
             {% else %}
-	    <li><a href='{{ url_for('users.register') }}'>Register</a></li>
 	    <li><a href='{{ url_for('users.login') }}'>Login</a></li>
             {% endif %}
         </ul>

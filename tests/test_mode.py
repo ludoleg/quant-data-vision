@@ -15,7 +15,7 @@ class ModeTests(BaseTestCase):
                 follow_redirects=True
             )
             self.assertEqual(response.status_code, 200)
-            self.assertIn(b'Please login', response.data)
+            self.assertIn(b'Sign in', response.data)
 
     def test_user_is_redirected(self):
         with self.client:

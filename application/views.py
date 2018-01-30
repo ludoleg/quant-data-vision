@@ -413,8 +413,6 @@ def chemin():
         with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w') as outfile:
             json.dump(array, outfile)
 
-        app.logger.warning('Filename: %s', filename)
-
         # Initialize the session object with chemin data
         session['autoremove'] = False
         session['dbname'] = 'difdata_chemin.txt'
@@ -655,6 +653,10 @@ def process():
         # parse sample data file wrt format
         filename = uploaded_file.filename
 
+        if current_user.is_authenticated:
+            app.logger.warning('User:{}'.format(current_user.name))
+
+        app.logger.warning('File:{}'.format(filename))
         # Need to reset to initial as we are dealing with new file
         clearModeCtx()
         loadModeCtx()

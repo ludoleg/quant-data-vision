@@ -21,6 +21,7 @@ bootstrap = Bootstrap(app)
 CORS(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager()
+login_manager.login_view = 'login'
 login_manager.init_app(app)
 app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)

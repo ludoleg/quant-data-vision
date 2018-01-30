@@ -25,7 +25,7 @@ class FlaskTestCase(BaseTestCase):
     # Ensure that the login page loads correctly
     def test_login_page_loads(self):
         response = self.client.get('/login')
-        self.assertIn(b'Please login', response.data)
+        self.assertIn(b'Sign in', response.data)
 
         # Ensure login behaves correctly with incorrect credentials
     def test_incorrect_login(self):
@@ -34,7 +34,7 @@ class FlaskTestCase(BaseTestCase):
             data=dict(username="wrong", password="wrong"),
             follow_redirects=True
         )
-        self.assertIn(b'Invalid username or password.', response.data)
+        self.assertIn(b'Invalid username or password', response.data)
 
 
 if __name__ == '__main__':
