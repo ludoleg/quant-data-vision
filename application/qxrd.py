@@ -7,10 +7,11 @@ from scipy.optimize import leastsq
 
 # import logging
 # logger = logging.getLogger('application.qxrd')
-# logger.setLevel(logging.DEBUG)
+
 # logger.error("Lets do it")
 # logger.debug("Really")
 logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 logger.debug("Debug, Really")
 
 '''

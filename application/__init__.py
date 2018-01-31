@@ -27,6 +27,11 @@ app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
 app.logger.info('Welcome to Qanalyze')
 
+import logging
+stream_handler = logging.StreamHandler()
+app.logger.addHandler(stream_handler)
+app.logger.setLevel(logging.INFO)
+app.logger.info('qanalyze startup')
 
 from users.views import users_blueprint
 from views import *
