@@ -38,6 +38,7 @@ defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
 
 @app.context_processor
 def inject_title():
+    app.logger.warning(session)
     if current_user.is_authenticated:
         if 'mode' in session:
             mode = Mode.query.get(session['mode'])
@@ -124,7 +125,7 @@ def home():
             author_id=current_user.id).first()
         if mode:
             modeset = True
-    app.logger.warning(session)
+    # app.logger.warning(session)
     return render_template('index.html', modeset=modeset)
 
 
@@ -267,7 +268,7 @@ def modes():
         modes_ids = request.form.getlist('mode_id', type=int)
         # print modes_ids
         for id in modes_ids:
-            if(session['mode'] == id):
+            if('mode' in session and session['mode'] == id):
                 session.pop('mode')
             m = Mode.query.get(id)
             db.session.delete(m)
