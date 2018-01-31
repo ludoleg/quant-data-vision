@@ -2,10 +2,11 @@
 #### imports ####
 #################
 from flask import flash, redirect, render_template, request, url_for, Blueprint, session
+from werkzeug.urls import url_parse
 from flask_login import login_user, login_required, logout_user, current_user
 from forms import LoginForm, RegisterForm
-from application.models import User, bcrypt
-from application import db
+from application.models import User
+from application import db, bcrypt
 
 ################
 #### config ####
@@ -25,21 +26,20 @@ users_blueprint = Blueprint(
 @users_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
-    form = LoginForm(request.form)
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            user = User.query.filter_by(name=request.form['username']).first()
-            if user is not None and bcrypt.check_password_hash(
-                user.password, request.form['password']
-            ):
-                # session['logged_in'] = True
-                login_user(user)
-                # flash('You were logged in. Go Crazy.')
-                return redirect(url_for('home'))
-
-            else:
-                error = 'Invalid username or password.'
-    return render_template('login.html', form=form, error=error)
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(name=form.username.data).first()
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid username or password')
+            return redirect(url_for('users.login'))
+        login_user(user, remember=form.remember_me.data)
+        next_page = request.args.get('next')
+        if not next_page or url_parse(next_page).netloc != '':
+            next_page = url_for('home')
+        return redirect(next_page)
+    return render_template('login.html', title='Sign In', form=form)
 
 
 @users_blueprint.route('/logout')
@@ -53,15 +53,14 @@ def logout():
 
 @users_blueprint.route('/register', methods=['GET', 'POST'])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
     form = RegisterForm()
     if form.validate_on_submit():
-        user = User(
-            name=form.username.data,
-            email=form.email.data,
-            password=form.password.data
-        )
+        user = User(name=form.username.data, email=form.email.data,
+                    password=form.password.data)
         db.session.add(user)
         db.session.commit()
-        login_user(user)
-        return redirect(url_for('home'))
-    return render_template('register.html', form=form)
+        flash('Congratulations, you are now a registered user!')
+        return redirect(url_for('users.login'))
+    return render_template('register.html', title='Register', form=form)

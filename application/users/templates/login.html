@@ -9,5 +9,9 @@
     {{ form.csrf_token }}
     {{ form.hidden_tag() }}
     {{ wtf.quick_form(form) }}
+    <div>
+      <p>
+      <p>New User? <a href="{{ url_for('users.register') }}">Click to Register!</a></p>
+    </div>
 </div>
 {% endblock %}

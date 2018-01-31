@@ -265,7 +265,7 @@ def modes():
         return render_template('modes.html', modes=myModes)
     if request.method == 'POST':
         modes_ids = request.form.getlist('mode_id', type=int)
-        print modes_ids
+        # print modes_ids
         for id in modes_ids:
             if(session['mode'] == id):
                 session.pop('mode')
@@ -281,8 +281,8 @@ def createmodes():
     if request.method == 'GET':
         return render_template('modesCreate.html')
     if request.method == 'POST':
-        print current_user.id
-        print current_user.name
+        # print current_user.id
+        # print current_user.name
         title = request.form['modeTitle']
         qlambda = request.form['lambda']
         target = request.form['target']
@@ -319,7 +319,7 @@ def editmodes():
         myMode = Mode.query.get(id)
         return render_template('modesEdit.html', mode=myMode, key=id)
     if request.method == 'POST':
-        print request.form
+        # print request.form
         id = request.form['key_id']
         myMode = Mode.query.get(id)
         myMode.title = request.form['name']
@@ -330,7 +330,7 @@ def editmodes():
         inventory = request.form['inventory']
         old = request.form['oldinventory']
         if old != inventory:
-            print request.form['inventory'], old
+            # print request.form['inventory'], old
             myMode.inventory = inventory
             if inventory == "cement":
                 initial = sorted(phaselist.cementPhases)
@@ -361,7 +361,7 @@ def active_mode():
         mode_id = request.form['mode']
         mode = Mode.query.get(mode_id)
         session['mode'] = mode_id
-        print mode_id, mode.id, session
+        # print mode_id, mode.id, session
         return redirect('/')
     if request.method == 'GET':
         myModes = db.session.query(Mode).filter_by(author_id=current_user.id)
@@ -413,8 +413,6 @@ def chemin():
         with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w') as outfile:
             json.dump(array, outfile)
 
-        app.logger.warning('Filename: %s', filename)
-
         # Initialize the session object with chemin data
         session['autoremove'] = False
         session['dbname'] = 'difdata_chemin.txt'
@@ -452,7 +450,7 @@ def chemin():
         difdata = open(DBname, 'r').readlines()
         userData = (angle, diff)
         # results, BG, calcdiff = qxrd.Qanalyze(userData,
-        print session
+        # print session
         results, BG, Sum, mineralpatterns = qxrd.Qanalyze(userData,
                                                           difdata,
                                                           selectedphases,
@@ -627,7 +625,7 @@ def loadModeCtx():
             # No mode has been selected yet - should all be replaced by a function activatemode
             mode = db.session.query(Mode).filter_by(
                 author_id=current_user.id).first()
-        print mode.initial
+        # print mode.initial
         session['mode'] = mode.id
         session['selected'] = mode.initial
         session['dbname'] = 'difdata_' + mode.inventory + '.txt'
@@ -655,6 +653,10 @@ def process():
         # parse sample data file wrt format
         filename = uploaded_file.filename
 
+        if current_user.is_authenticated:
+            app.logger.warning('User:{}'.format(current_user.name))
+
+        app.logger.warning('File:{}'.format(filename))
         # Need to reset to initial as we are dealing with new file
         clearModeCtx()
         loadModeCtx()
@@ -687,7 +689,7 @@ def process():
     filename = session['filename']
 
     XRDdata = open(os.path.join('uploads', filename), 'r')
-    print XRDdata, filename
+    # print XRDdata, filename
 
     DBname = session['dbname']
 # Load in the DB file
@@ -717,7 +719,7 @@ def process():
     InstrParams = {"Lambda": Lambda, "Target": Target,
                    "FWHMa": FWHMa, "FWHMb": FWHMb}
 
-    print session
+    # print session
     # Dif data captures all cristallographic data
     selectedphases = []
     for i in range(len(selectedPhases)):

@@ -21,11 +21,17 @@ bootstrap = Bootstrap(app)
 CORS(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager()
+login_manager.login_view = 'login'
 login_manager.init_app(app)
 app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
 app.logger.info('Welcome to Qanalyze')
 
+import logging
+stream_handler = logging.StreamHandler()
+app.logger.addHandler(stream_handler)
+app.logger.setLevel(logging.INFO)
+app.logger.info('qanalyze startup')
 
 from users.views import users_blueprint
 from views import *
@@ -40,3 +46,6 @@ login_manager.login_view = "users.login"
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.filter(User.id == int(user_id)).first()
+
+
+from application import errors

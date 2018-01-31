@@ -5,6 +5,15 @@ from math import *
 #from math import factorial
 from scipy.optimize import leastsq
 
+# import logging
+# logger = logging.getLogger('application.qxrd')
+
+# logger.error("Lets do it")
+# logger.debug("Really")
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.debug("Debug, Really")
+
 '''
 code was modified to enable selectedphase list to be used.  QXRDtools remains unchanged.
 
@@ -109,7 +118,8 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
     angle = np.array(angle)
     diff = np.array(diff)
 
-    logging.debug("Start Qanalyze")
+    logger.debug("Start Qanalyze")
+    logger.debug("***********************************************************")
 
     Lambda = instrParams['Lambda']
     Target = instrParams['Target']
@@ -120,7 +130,7 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
     if Lambda in ('', 0) and Target == '':
         Target = "Co"
         Lambda = getLambdafromTarget(Target)
-        logging.info('No Lambda or Target data:  assumed to be Co Ka')
+        logger.warning('No Lambda or Target data:  assumed to be Co Ka')
 
     sigmaa = FWHMa / (2 * sqrt(2 * log(2)))
     sigmab = FWHMb / (2 * sqrt(2 * log(2)))
@@ -143,14 +153,15 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
     code, enable = CleanMineralList()
     #######################   Extract from difdata      ############
 
-    logging.info("Starting extracting from difdata")
+    logger.info("Starting extracting from difdata")
     starttime = time.time()
     # DB, RIR, peakcount = makeDB(difdata, code, enable, Lambda)
     DB, RIR, peakcount = makeDB(difdata, Lambda)
     DB2T = DB[:, :, 0]
     DBInt = DB[:, :, 1]
     PatDB, enable = calculatePatDB(DB2T, DBInt, sigmaa, sigmab)
-    logging.info("PatDB computing time = %.3fs" % (time.time() - starttime))
+    logger.info("PatDB computing time = %.3fs" %
+                (time.time() - starttime))
 
     Thresh = setQthresh(RIR)
     if autoremove:
@@ -167,14 +178,14 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
     starttime = time.time()
 
     if initialize and autoremove:
-        logging.info("Start Initialization")
+        logger.info("Start Initialization")
         Iinit = getIinitPatDB(INIsmoothing, OStarget)
         Ithresh = 0.01
         Ithresholding(Ithresh, Iinit)
         while sum(enable) > 25:
             Ithresh += 0.01
             Ithresholding(Ithresh, Iinit)
-        logging.info("Done computing Initialization")
+        logger.info("Done computing Initialization")
 
         #####     remove minerals disabled by initialization       ################
         if sum(enable) > 0:
@@ -184,10 +195,11 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
             #Sum_init *= max(diff-BG)/max(Sum_init)
             Sum_init += BG
             Qinit = Iinit / sum(Iinit) * 100
-            logging.info("Iinit computing time = %.3fs" %
+            logger.debug("Iinit computing time = %.3fs" %
                          (time.time() - starttime))
         for i in range(0, len(code)):
-            logging.info("Qinit_%s : %.2f " % (nameref[code[i]], Qinit[i]))
+            logger.debug("Qinit_%s : %.2f " %
+                         (nameref[code[i]], Qinit[i]))
     else:
         Iinit = np.array(([1.] * len(enable))) * np.array(enable)
 
@@ -198,9 +210,9 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
 
     if optimize:
 
-        logging.info("Start computing optimization")
+        logger.info("Start computing optimization")
         I = QrefinelstsqPatDB(Iinit, autoremove)
-        logging.info("Done computing optimization")
+        logger.info("Done computing optimization")
 
         #####  reorganize results by decreasing % order #########
         if autoremove:
@@ -221,10 +233,11 @@ def Qanalyze(userData, difdata, selection, instrParams, autoremove, BGstrip):
         results = (('NO_RESULT', '0000', '000.0'),)
 
     for i in range(0, len(code)):
-        logging.info("%s = %.2f" % (code[i], I[i]))
+        logger.info("%s = %.2f" % (code[i], I[i]))
 
-    logging.info("I Lstsq computing time = %.3fs" % (time.time() - starttime))
-    logging.debug(code)
+    logger.info("I Lstsq computing time = %.3fs" %
+                (time.time() - starttime))
+    logger.debug(code)
 
     mineralpatterns = PatDB
     for i in range(0, len(I)):
@@ -422,7 +435,7 @@ def getLambdafromTarget(Target):
     elif Target == 'Co':
         Lambda = 1.78897
     else:
-        logging.info('ERROR: Tube target material unknown')
+        logger.info('ERROR: Tube target material unknown')
     return Lambda
 
 
@@ -607,7 +620,7 @@ def Ithresholding(Ithreshratio, Iloc):
     for i in range(0, len(enable)):
         if enable[i] <> 0 and Iloc[i] < max(Iloc) * Ithreshratio:
             enable[i] = 0
-            #logging.info("%s- init : %.4f >>> eliminated\t" %(mineral[i],I[i]))
+            #logger.info("%s- init : %.4f >>> eliminated\t" %(mineral[i],I[i]))
     return
 
 
@@ -622,7 +635,7 @@ def Qthresholding(Iloc):
     for i in range(0, len(enable2)):
         if enable2[i] <> 0 and Q[i] < Thresh[i]:
             enable2[i] = 0
-            #logging.info( "%s- init : %.1f >>> eliminated\t" %(mineral[i],Q[i]))
+            #logger.info( "%s- init : %.1f >>> eliminated\t" %(mineral[i],Q[i]))
     return enable2
 
 
@@ -660,7 +673,7 @@ def CleanMineralListPatDB(Iloc):
             Threshthresh.append(Thresh[i])
             Ithresh.append(Iloc[i])
             PatDBthresh.append(PatDB[i])
-    #logging.info("list cleanup computing time = %.2f" %(time.time()-t0))
+    #logger.info("list cleanup computing time = %.2f" %(time.time()-t0))
     return codethresh, RIRthresh, enablethresh, Threshthresh, Ithresh, np.array(PatDBthresh)
 
 
@@ -739,12 +752,12 @@ def QrefinelstsqPatDB(Iinit, autoremove):
         # recalculate DB with current list
         counter += 1
         t0 = time.time()
-        #logging.info( "counter = %s     minerals:%s", counter, sum(enable))
+        #logger.info( "counter = %s     minerals:%s", counter, sum(enable))
         Keep_refining = False
         Istart = I
         I, pcov = leastsq(residualPatDB, Istart,  gtol=precision[counter - 1])
         I = abs(I)
-        logging.info("end LSTSQ #%s",  counter)
+        logger.info("end LSTSQ #%s",  counter)
         if autoremove:
             enable2 = Qthresholding(I)
             #I *= enable2
@@ -757,6 +770,6 @@ def QrefinelstsqPatDB(Iinit, autoremove):
             if counter < 3:
                 Keep_refining = True
 
-        logging.info("lstsq computing time =%s", (time.time() - t0))
+        logger.info("lstsq computing time =%s", (time.time() - t0))
 
     return I

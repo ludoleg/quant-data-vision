@@ -1,111 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="XRD.Qanalyze is an automated cloud-based application for quantitative analysis of mineral samples using X-ray diffraction (XRD) data">
-    <meta name="author" content="Ludovic Legrand">
-    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-    <title>QAnalyze: Mineral analysis using X-Ray Diffraction data</title>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="XRD.Qanalyze is an automated cloud-based application for quantitative analysis of mineral samples using X-ray diffraction (XRD) data">
+        <meta name="author" content="Ludovic Legrand">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        {% if title %}
+        <title>{{ title }} - QAnalyze</title>
+        {% else %}
+        <title>QAnalyze: Mineral analysis using X-Ray Diffraction data</title>
+        {% endif %}
 
-    <!-- Bootstrap core CSS -->
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-    <!-- Bootstrap theme -->
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+        <!-- Bootstrap core CSS -->
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+        <!-- Bootstrap theme -->
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 
-    <!-- Custom styles for this template -->
-    <link href="/static/stylesheets/css/theme.css" rel="stylesheet">
-    <!-- Custom styles for this template -->
-    <link href="/static/stylesheets/css/sticky-footer-navbar.css" rel="stylesheet">
+        <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+        
+        <!-- Custom styles for this template -->
+        <link href="/static/stylesheets/css/theme.css" rel="stylesheet">
+        <!-- Custom styles for this template -->
+        <link href="/static/stylesheets/css/sticky-footer-navbar.css" rel="stylesheet">
 
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <meta name="google-site-verification" content="0zANtQFfJ86Bg8Ztp8_aYcJ0do_6Xp2T9uQJnbxpiG4" />
-  </head>
-  <body role="document">
+        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <!-- Include all compiled plugins (below), or include individual files as needed -->
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <meta name="google-site-verification" content="0zANtQFfJ86Bg8Ztp8_aYcJ0do_6Xp2T9uQJnbxpiG4" />
+    </head>
+    <body role="document">
 
-    <!-- Fixed navbar -->
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Quant Vision</span>
-          </button>
-          <a class="navbar-brand" href="/">QAnalyze</a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse pull-right">
-            <div id="userdisplay" class="navbar-text" style="display:none;"></div>
-        </div>
-        <ul class="nav navbar-nav">
-	  <!-- <li class="active"><a href="/">Home</a></li> -->
-	    <li><a href="/about">About</a></li>
-            {% if current_user.is_authenticated %}
-            <li class="dropdown">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings<span class="caret"></span></a>
-                <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                    {% if modetitle %}
-                    <li><a href="/activeMode">Change Active Mode</a></li>
-                    <li><a href="/setphase">Set Initial Phases</a></li>
-                    {% else %}
-                    <li class="disabled"><a href="#">Change Active Mode</a></li>
-                    <li class="disabled"><a href="#">Set Initial Phases</a></li>
-                    {%endif%}
-		    <li class="divider"></li>
-                    <li><a href="/modes">Create/Edit Modes</a></li>
-                </ul>
-            </li>
-            {% endif %}
-            {% if current_user.is_authenticated %}
-            <li><a href="#">Active Mode: {{ modetitle }}</a></li>
-            <ul class="nav navbar-nav navbar-right">
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Hello, {{ current_user.name|capitalize }}<span class="caret"></span></a>
-                    <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                        <li><a href="{{ url_for('users.logout') }}">Logout</a></li>
+        <!-- Fixed navbar -->
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                        <span class="sr-only">Quant Vision</span>
+                    </button>
+                    <a class="navbar-brand" href="/">QAnalyze</a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse pull-right">
+                    <div id="userdisplay" class="navbar-text" style="display:none;"></div>
+                </div>
+                <ul class="nav navbar-nav">
+	            <!-- <li class="active"><a href="/">Home</a></li> -->
+	            <li><a href="/about">About</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings<span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                            {% if modetitle %}
+                            <li><a href="/activeMode">Change Active Mode</a></li>
+                            <li><a href="{{ url_for('setphase') }}">Set Initial Phases</a></li>
+                            {% else %}
+                            <li class="disabled"><a href="#">Change Active Mode</a></li>
+                            <li class="disabled"><a href="#">Set Initial Phases</a></li>
+                            {%endif%}
+	                    <li class="divider"></li>
+                            <li><a href="{{ url_for('modes') }}">Create/Edit Modes</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    {% if current_user.is_authenticated %}
+                    <li><a href="#">Active Mode: {{ modetitle }}</a></li>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Hello, {{ current_user.name|capitalize }}<span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+                                <li><a href="{{ url_for('users.logout') }}">Logout</a></li>
+                            </ul>
+                        </li>
                     </ul>
-                </li>
-            </ul>
-            {% else %}
-	    <li><a href='{{ url_for('users.register') }}'>Register</a></li>
-	    <li><a href='{{ url_for('users.login') }}'>Login</a></li>
+                    {% else %}
+                    <li><a href='{{ url_for('users.login') }}'>Login</a></li>
+                    {% endif %}
+                </ul>
+            </div><!--/.nav-collapse -->
+        </nav>
+        <div class="container theme-showcase" role="main">
+            {% block content %}{% endblock %}
+        </div> <!-- /container -->
+        <div class="container">
+            <!-- errors -->
+            {% if error %}
+            <p class="error"><strong>Error:</strong> {{ error }}</p>
             {% endif %}
-        </ul>
-      </div><!--/.nav-collapse -->
-    </nav>
-    <div class="container theme-showcase" role="main">
-        {% block content %}{% endblock %}
-    </div> <!-- /container -->
-    <div class="container">
-        <!-- errors -->
-        {% if error %}
-        <p class="error"><strong>Error:</strong> {{ error }}</p>
-        {% endif %}
 
-        <!-- messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }} alert-dismissible" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <!-- <strong>Title</strong> --> {{ message }}
-        </div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}    </div>
+            <!-- messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <!-- <strong>Title</strong> --> {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}    </div>
 
-    <footer class="footer">
-      <div class="container">
-        <p class="text-muted">© QAnalyze Ludo & Philippe 2016</p>
-      </div>
-    </footer>
-    
-  </body>
+            <footer class="footer">
+                <div class="container">
+                    <p class="text-muted">© QAnalyze Ludo & Philippe 2016</p>
+                </div>
+            </footer>
+
+    </body>
 </html>
