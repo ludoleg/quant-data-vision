@@ -5,11 +5,13 @@ from math import *
 #from math import factorial
 from scipy.optimize import leastsq
 
-import logging
-logger = logging.getLogger('application.qxrd')
-logger.setLevel(logging.DEBUG)
-logger.error("Lets do it")
-logger.debug("Really")
+# import logging
+# logger = logging.getLogger('application.qxrd')
+# logger.setLevel(logging.DEBUG)
+# logger.error("Lets do it")
+# logger.debug("Really")
+logger = logging.getLogger()
+logger.debug("Debug, Really")
 
 '''
 code was modified to enable selectedphase list to be used.  QXRDtools remains unchanged.
