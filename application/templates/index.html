@@ -4,6 +4,11 @@
   <h3>Diffraction Diagram</h3>
 </div>
 <p>
+  {% for field, errors in form.errors.iteritems() %}
+  <div class="alert alert-danger" role="alert">
+    {{ form[field].label }}: {{ ', '.join(errors) }}
+  </div>
+{% endfor %}
   {% if current_user.is_authenticated and not modeset %}
 <div class="alert alert-danger" role="alert">
   <h4 class="alert-heading">No mode available</h4>
@@ -12,11 +17,10 @@
   <p class="mb-0">Please visit <a href="/modes/create" class="alert-link">modes</a> to start.</p>
 {% else %}
 <div class="container" id="staticimg">
-  <form action="/process"
-      method="POST"
-      enctype="multipart/form-data">
+  <form method="POST" enctype="multipart/form-data">
     <img id="image" src="/static/img/emptygraph.png" class="img-responsive">
-    <input id="uploadFile" type="file" name="rockdatafile" style="display: none;"/>
+    <input id="uploadFile" type="file" name="file" style="display: none;"/>
+    {{ form.hidden_tag() }}
   </form>
 </div>
 {% endif %}

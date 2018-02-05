@@ -1,9 +1,12 @@
 from flask import request, render_template, url_for, session, make_response, redirect, logging, json, flash
 from werkzeug.utils import secure_filename
-
-from application import app
+from flask_wtf import FlaskForm
+from wtforms import FileField
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 from flask_login import login_required, current_user
+
+from application import app
 
 import numpy as np
 import StringIO
@@ -38,7 +41,7 @@ defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
 
 @app.context_processor
 def inject_title():
-    app.logger.warning(session)
+    # app.logger.warning(session)
     if current_user.is_authenticated:
         if 'mode' in session:
             mode = Mode.query.get(session['mode'])
@@ -117,7 +120,12 @@ def rebalance(results):
     return selected, available
 
 
-@app.route('/')
+class UploadForm(FlaskForm):
+    file = FileField('File format', validators=[FileRequired(), FileAllowed(
+        ['txt', 'plv', 'csv', 'mdi', 'dif'], 'Only XRD files format such as .plv, .mdi, .csv, etc are accepted.')])
+
+
+@app.route('/', methods=['GET', 'POST'])
 def home():
     modeset = False
     if current_user.is_authenticated:
@@ -126,7 +134,18 @@ def home():
         if mode:
             modeset = True
     # app.logger.warning(session)
-    return render_template('index.html', modeset=modeset)
+
+    form = UploadForm()
+
+    if form.validate_on_submit():
+        f = form.file.data
+        filename = secure_filename(f.filename)
+        f.save(os.path.join(app.config['UPLOAD_FOLDER'],
+                            filename))
+        session['filename'] = filename
+        return redirect(url_for('process'))
+    print form.errors
+    return render_template('index.html', form=form, mode=modeset)
 
 
 @app.route('/about')
@@ -643,33 +662,13 @@ def loadModeCtx():
 
 @app.route('/process', methods=['GET', 'POST'])
 def process():
-    # if request.method == 'GET':
+    if current_user.is_authenticated:
+        app.logger.warning('User:{}'.format(current_user.name))
 
-    if request.method == 'POST':
-        uploaded_file = request.files['rockdatafile']
-        if not uploaded_file:
-            return 'No file uploaded.', 400
-
-        # Load the sample data file in userData
-        # parse sample data file wrt format
-        filename = uploaded_file.filename
-
-        if current_user.is_authenticated:
-            app.logger.warning('User:{}'.format(current_user.name))
-
-        app.logger.warning('File:{}'.format(filename))
-        # Need to reset to initial as we are dealing with new file
-        clearModeCtx()
-        loadModeCtx()
-
-        if uploaded_file and allowed_file(uploaded_file.filename):
-            # Make a valid version of filename for any file ystem
-            filename = secure_filename(uploaded_file.filename)
-            uploaded_file.save(os.path.join(app.config['UPLOAD_FOLDER'],
-                                            filename))
-            session['filename'] = filename
-        else:
-            return 'File not supported', 400
+    app.logger.warning('File:{}'.format(session['filename']))
+    # Need to reset to initial as we are dealing with new file
+    clearModeCtx()
+    loadModeCtx()
 
     app.logger.debug(session)
 
