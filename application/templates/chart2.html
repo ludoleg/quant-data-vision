@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}QAnalyze - XRD pattern chart{% endblock %}
+{% block content %}
+<div id="xrdPlot" style="width:1200px;height:400px;"></div>
+<!-- Modal -->
+<div class="modal fade bs-example-modal-sm" id="myModal" role="dialog">
+    <!-- Modal content-->
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+	        <h4 class="modal-title">Processing...</h4>
+            </div>
+            <div class="modal-body">
+	        <div class="progress progress-striped active">
+	            <div class="progress-bar progress-bar-info"  role="progressbar" style="width: 100%">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-xs-3">
+    <button id="analyze" type="submit" class="btn btn-primary">Analyze</button>
+</div>
+<div id="result"></div>
+<!-- Modal -->
+<div class="modal fade bs-example-modal-sm" id="myModal" role="dialog">
+    <!-- Modal content-->
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+	        <h4 class="modal-title">Processing...</h4>
+            </div>
+            <div class="modal-body">
+	        <div class="progress progress-striped active">
+	            <div class="progress-bar progress-bar-info"  role="progressbar" style="width: 100%">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+ var angle = {{ angle }}
+ var diff = {{ diff }}
+ console.log(angle)
+
+ var plotdata =
+     {
+         'sample': {
+             'name': "Cumberland_reference",
+             'x': angle,
+             'y': diff,
+             'phases': [
+                 { "name": "Andesine",  "AMCSD_code": 1052 },
+                 { "name": "Anhydrite", "AMCSD_code": 5117 },
+                 { "name": "Augite",    "AMCSD_code": 1 },
+                 { "name": "Bassanite", "AMCSD_code": 13868 },
+                 { "name": "Forsterite","AMCSD_code": 2674 },
+                 { "name": "Hematite",  "AMCSD_code": 143 },
+                 { "name": "Ilmenite",  "AMCSD_code": 9082 },
+                 { "name": "Maghemite", "AMCSD_code": 7898 },
+                 { "name": "Orthopyroxene", "AMCSD_code": 4556 },
+                 { "name": "Pigeonite", "AMCSD_code": 209 },
+                 { "name": "Fayalite",  "AMCSD_code": 174 },
+                 { "name": "Sanidine",  "AMCSD_code": 10740 }
+             ]
+         }
+     }
+
+ // $("#analyze").click(function() {
+
+ // });
+ var trace1 = {
+     x: {{ angle }},
+     y: {{ diff }},
+     mode: 'lines',
+     line: {
+         color: 'rgb(0,0,0)',
+         width: 1
+     },
+     name: 'Data',
+     hoverinfo: 'none'
+ };
+
+ var graphdata = [trace1]
+
+ var layout = {
+     /* annotations: [
+        {
+        x: 0.99,
+        y: 0.95,
+        xref: "paper",
+        yref: "paper",
+        text: phases,
+        showarrow: false,
+        bgcolor: 'rgba(160, 236, 133, 0.7)',
+        borderpad: 6,
+        align: 'right'
+        }],*/
+     showlegend: true,
+     legend: {
+         x: 100,
+         y: 1
+     },
+     title: '{{ samplename }}',
+     xaxis: {
+         showgrid: true,
+         zeroline: true,
+         showline: true,
+         title: '2\u03B8 (deg)',
+         gridwidth: 1,
+         zerolinecolor: '#969696',
+         zerolinewidth: 1,
+         linecolor: '#636363',
+         linewidth: 1,
+         mirror: 'ticks',
+         gridcolor: '#bdbdbd'
+     },
+     yaxis: {
+         title: 'Intensity',
+         showgrid: true,
+         zeroline: true,
+         gridwidth: 1,
+         showline: true,
+         zerolinecolor: '#969696',
+         zerolinewidth: 1,
+         linecolor: '#636363',
+         linewidth: 1,
+         mirror: 'ticks',
+         gridcolor: '#bdbdbd'
+     },
+ };
+
+ Plotly.newPlot(xrdPlot, graphdata, layout);
+ //Plotly.addTraces(xrdPlot, [trace4, trace5, trace6]);
+ // for (var i = 0; i < list.length; i++) {
+ //     update.y = minerals[i]
+ //     update.name = list[i][0]+' '+list[i][2]+'%'
+ //     Plotly.addTraces(xrdPlot, update);
+ // }
+
+ $(document).ready(function(){
+     $('button').click(function(){
+         $("#myModal").modal();
+         $.ajax({
+             type: 'POST',
+             url: '/compute',
+             data: JSON.stringify(plotdata),
+             success: function(results) {
+                 console.log(results);
+                 graphs(results);
+             },
+             contentType: "application/json",
+             dataType: 'json'
+         });
+     });
+ });
+
+ var update = {
+     x: {{ angle }},
+     y: '',
+     mode: 'lines',
+     line: {
+         width: 1
+     },
+     name: '',
+     hoverinfo: 'none',
+     visible: 'legendonly'
+ };
+
+ var visi = {
+     visible: 'true'
+ }
+ var plotDiv = document.getElementById('xrdPlot');
+ 
+ function graphs(results) {
+     $('#myModal').modal('hide')
+     update.y = results.BG;
+     update.name = "Background"
+     Plotly.addTraces(xrdPlot, update);
+     update.y = results.sum;
+     update.name = "Fit"
+     Plotly.addTraces(xrdPlot, update);
+     update.y = results.difference;
+     update.name = "Difference"
+     Plotly.addTraces(xrdPlot, update);
+     for (var i = 0; i < results.traces.length; i++) {
+         update.y = results.traces[i];
+         update.name = results.phases[i][0]+' '+results.phases[i][2]+'%'
+         Plotly.addTraces(xrdPlot, update);
+     }
+     Plotly.restyle(plotDiv, visi, [1,2]);
+ }
+
+ var data =
+     {"sample": {
+         "name": "Cumberland_reference",
+         "data": [
+             { "x": 3, "y": 7808 },
+             { "x": 3.05, "y": 7448 },
+             { "x": 3.1, "y": 6987 },
+             { "x": 3.15, "y": 7732 },
+             { "x": 3.2, "y": 6676 },
+             { "x": 3.25, "y": 6321 },
+             { "x": 3.3, "y": 6709 },
+             { "x": 3.35, "y": 5547 }
+         ]
+     },
+      "phases": [
+          { "name": "Andesine",  "AMCSD_code": 1052 },
+          { "name": "Anhydrite", "AMCSD_code": 5117 },
+          { "name": "Augite",    "AMCSD_code": 1 },
+          { "name": "Bassanite", "AMCSD_code": 13868 },
+          { "name": "Forsterite","AMCSD_code": 2674 },
+          { "name": "Hematite",  "AMCSD_code": 143 },
+          { "name": "Ilmenite",  "AMCSD_code": 9082 },
+          { "name": "Maghemite", "AMCSD_code": 7898 },
+          { "name": "Orthopyroxene", "AMCSD_code": 4556 },
+          { "name": "Pigeonite", "AMCSD_code": 209 },
+          { "name": "Fayalite",  "AMCSD_code": 174 },
+          { "name": "Sanidine",  "AMCSD_code": 10740 }
+      ]
+     }
+</script>
+{% endblock %}
