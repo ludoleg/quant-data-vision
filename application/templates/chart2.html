@@ -2,27 +2,82 @@
 {% block title %}QAnalyze - XRD pattern chart{% endblock %}
 {% block content %}
 <div id="xrdPlot" style="width:1200px;height:400px;"></div>
-<!-- Modal -->
-<div class="modal fade bs-example-modal-sm" id="myModal" role="dialog">
-    <!-- Modal content-->
-    <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-	        <h4 class="modal-title">Processing...</h4>
+<div class="container">
+    <div class="container row">
+        <button id="analyze1" type="submit" class="btn btn-primary">Analyze 1</button>
+        <button id='addrm' class="btn btn-primary" style="display: none">Add/Remove phase</button>
+    </div>
+    <div id="result" class="panel panel-default row" style="display: none">
+        <div class="panel-body">
+            <div class="col-lg-3">
+                <h4>Mode: {{ mode.title }}</h4>
+                <h4>Database: {{ mode.inventory }}</h4>
             </div>
-            <div class="modal-body">
-	        <div class="progress progress-striped active">
-	            <div class="progress-bar progress-bar-info"  role="progressbar" style="width: 100%">
-                    </div>
+            <div class="col-lg-6">
+                <table class="table table-bordered table-condensed" style="width: auto;">
+	            <tr>
+	                <th bgcolor="#DDDDDD">Phase</th>
+	                <th bgcolor="#DDDDDD">AMCSD Code #</th> 
+	                <th bgcolor="#DDDDDD">Mass %</th> 
+                    </tr>
+                </table>
+            </div>
+            <div class="col-lg-3">
+                <div id="csvbutton" >
+	            <a href="/csvDownload?key={{ url_text }}" type="button" class="btn btn-xs btn-primary">Download CSV</button></a>
                 </div>
             </div>
         </div>
     </div>
+    <div class="row panel panel-default" id="phaselist" style="display: none">
+        <div class="panel-body">
+            <form novalidate
+                  action="/phase"
+                  method="POST"
+                  enctype="multipart/form-data"
+                  onsubmit="checkRightPane();">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <h2><span class="control-label col-xs-3 form-control">Available Phases</span></h2>
+                        </div>
+                        <div class="col-xs-3">
+                        </div>
+                        <div class="col-xs-3">
+                            <h2><span class="control-label col-xs-3 form-control">Selected Phases</span></h2>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-3">
+                            <select name="availablephase" id="leftValues" multiple="multiple" class="form-control" size="10">
+                                {% for item in availablephaselist %}
+                                <option  value="{{ item }}">{{ item }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-xs-3" class="form-control">
+                            <input type="button" id="btnLeft" value="&lt;&lt;" />
+                            <input type="button" id="btnRight" value="&gt;&gt;" />
+                        </div>
+                        <div class="col-xs-3">
+                            <select name="selectedphase" id="rightValues" multiple="multiple" class="form-control" size="10" required>
+                                {% if (selectedphaselist is defined) and selectedphaselist %}
+                                {% for item in selectedphaselist %}
+                                <option  value="{{ item }}">{{ item }}</option>
+                                {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-xs-3">
+                            <button id="analyze2" type="submit" class="btn btn-primary">Analyze 2</button>
+                        </div>
+
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-<div class="col-xs-3">
-    <button id="analyze" type="submit" class="btn btn-primary">Analyze</button>
-</div>
-<div id="result"></div>
 <!-- Modal -->
 <div class="modal fade bs-example-modal-sm" id="myModal" role="dialog">
     <!-- Modal content-->
@@ -41,30 +96,89 @@
     </div>
 </div>
 <script>
+ var ph
+ console.log($("#rightValues").text())
+ 
+ $('#addrm').click(function(){
+     $('#analyze1').hide()
+     $('#phaselist').toggle();
+     $('#result').hide();
+ });
+
+ $("#btnLeft").click(function () {
+     var selectedItem = $("#rightValues option:selected");
+     $("#leftValues").append(selectedItem);
+     sortSelectOptions("#leftValues");
+     //     alert($('#rightValues').val() != null);
+     console.log($('#rightValues').text())
+ });
+
+
+ $("#btnRight").click(function () {
+     var selectedItem = $("#leftValues option:selected");
+     $("#rightValues").append(selectedItem);
+     sortSelectOptions("#rightValues")
+ });
+
+ function sortSelectOptions(selectElement) {
+     var options = $(selectElement + " option");
+     options.sort(function(a,b) {
+         if (a.text.toUpperCase() > b.text.toUpperCase()) return 1;
+         else if (a.text.toUpperCase() < b.text.toUpperCase()) return -1;
+         else return 0;
+     });
+
+     $(selectElement).empty().append( options );
+ }
+
+ function checkRightPane () {
+     if ($('#rightValues').has('option').length > 0 ) {
+         selectAllOptions();
+         $("#myModal").modal();
+     } else {
+         alert('At least one phase needs to be selected.');
+         event.preventDefault();
+         return false;  
+     }
+ }
+
+
+ function selectAllOptions()
+ {
+     var selObj = document.getElementById('rightValues');
+     if(selObj.options.length == 0) {
+     }
+     for (var i=0; i<selObj.options.length; i++) {
+         selObj.options[i].selected = true;
+     }
+     var selObj = document.getElementById('leftValues');
+     for (var i=0; i<selObj.options.length; i++) {
+         selObj.options[i].selected = true;
+     }
+ }
+
+ function myFunction() {
+     $("#result").hide()
+     var x = document.getElementById("phaselist");
+     if (x.style.display === "none") {
+         x.style.display = "block";
+     } else {
+         x.style.display = "none";
+     }
+ }
+
  var angle = {{ angle }}
  var diff = {{ diff }}
+ var filename = '{{ samplename }}'
  console.log(angle)
 
  var plotdata =
      {
          'sample': {
-             'name': "Cumberland_reference",
+             'name': filename,
              'x': angle,
              'y': diff,
-             'phases': [
-                 { "name": "Andesine",  "AMCSD_code": 1052 },
-                 { "name": "Anhydrite", "AMCSD_code": 5117 },
-                 { "name": "Augite",    "AMCSD_code": 1 },
-                 { "name": "Bassanite", "AMCSD_code": 13868 },
-                 { "name": "Forsterite","AMCSD_code": 2674 },
-                 { "name": "Hematite",  "AMCSD_code": 143 },
-                 { "name": "Ilmenite",  "AMCSD_code": 9082 },
-                 { "name": "Maghemite", "AMCSD_code": 7898 },
-                 { "name": "Orthopyroxene", "AMCSD_code": 4556 },
-                 { "name": "Pigeonite", "AMCSD_code": 209 },
-                 { "name": "Fayalite",  "AMCSD_code": 174 },
-                 { "name": "Sanidine",  "AMCSD_code": 10740 }
-             ]
+             'phases': ''
          }
      }
 
@@ -141,13 +255,18 @@
  // }
 
  $(document).ready(function(){
-     $('button').click(function(){
+     $('#analyze1').click(function(){
+         $('#phaselist').hide()
+         $('#analyze1').hide()
+         $('#addrm').show()
          $("#myModal").modal();
+         plotdata.phases = $('#rightValues').text()
          $.ajax({
              type: 'POST',
              url: '/compute',
              data: JSON.stringify(plotdata),
              success: function(results) {
+                 $('#result').show();
                  console.log(results);
                  graphs(results);
              },
@@ -175,11 +294,21 @@
  var plotDiv = document.getElementById('xrdPlot');
  
  function graphs(results) {
+     var phases = '';
+     for (var i = 0; i < results.phases.length; i++) {
+         phases += '<tr>';
+         phases += '<td class="col-md-3">'+results.phases[i][0]+'</td>';
+         phases += '<td class="col-md-3">'+results.phases[i][1]+'</td>';
+         phases += '<td class="col-md-3">'+results.phases[i][2]+'</td>';
+         phases += '</tr>';
+     }
+     $('.table').append(phases);
+     $('#result').show()
      $('#myModal').modal('hide')
-     update.y = results.BG;
+     update.y = results.background;
      update.name = "Background"
      Plotly.addTraces(xrdPlot, update);
-     update.y = results.sum;
+     update.y = results.fit;
      update.name = "Fit"
      Plotly.addTraces(xrdPlot, update);
      update.y = results.difference;

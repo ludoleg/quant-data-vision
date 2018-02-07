@@ -75,9 +75,9 @@ def rebal(selected, inventory):
         db = sorted(phaselist.rockPhases)
     elif inventory == "chemin":
         db = sorted(phaselist.cheminPhases)
-        selected.sort()
-        available = [x for x in db if x not in selected]
-        app.logger.debug(available)
+    selected.sort()
+    available = [x for x in db if x not in selected]
+    app.logger.debug(available)
     return available
 
 
@@ -403,12 +403,95 @@ def odr_post():
     return render_template('odr_post.html')
 
 
+def qxrd_worker(userData):
+    angle = userData[0]
+    diff = userData[1]
+
+    # defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
+    app.logger.debug(session)
+    app.logger.warning('Length of angle array: %d', len(angle))
+
+    # Load inventory
+    DBname = session['dbname']
+    difdata = open(DBname, 'r').readlines()
+
+    # Mode
+    myMode = defaultMode
+    Lambda = myMode.qlambda
+    Target = myMode.qtarget
+    FWHMa = myMode.fwhma
+    FWHMb = myMode.fwhmb
+
+    # Boundaries check
+    if(Lambda > 2.2 or Lambda == 0):
+        Lambda = ''
+    if(FWHMa > 0.01):
+        FWHMa = 0.01
+    if(FWHMa < -0.01):
+        FWHMa = -0.01
+    if(FWHMb > 1.0):
+        FWHMb = 1.0
+    if(FWHMb < 0.01):
+        FWHMb = 0.01
+
+    InstrParams = {"Lambda": Lambda,
+                   "Target": Target,
+                   "FWHMa": FWHMa,
+                   "FWHMb": FWHMb}
+
+    # Phase selection
+    selectedPhases = session['selected']
+    selectedphases = []
+    for i in range(len(selectedPhases)):
+        name, code = selectedPhases[i].split('\t')
+        code = int(code)
+        selectedphases.append((name, code))
+
+    results, BG, Sum, mineralpatterns = qxrd.Qanalyze(userData,
+                                                      difdata,
+                                                      selectedphases,
+                                                      InstrParams,
+                                                      session['autoremove'],
+                                                      True)
+
+    session['results'] = results
+    sel, ava = rebalance(results)
+    session['selected'] = sel
+
+    minerallist = [(l + BG).tolist() for l in mineralpatterns]
+    print len(minerallist)
+
+    xmin = min(angle)
+    xmax = max(angle)
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
+    offset = Imax / 2 * 3
+    offsetline = [offset] * len(angle)
+
+    difference_magnification = 1
+    difference = (diff - Sum) * difference_magnification
+    # logging.debug(results)
+    # logging.info("Done with processing")
+    offsetdiff = difference + offset
+
+    # Serialize the entire thing
+    result = dict()
+    result['traces'] = minerallist
+    result['phases'] = results
+    result['background'] = BG.tolist()
+    result['fit'] = Sum.tolist()
+    result['difference'] = offsetdiff.tolist()
+    result['selected'] = sel  # session['selected']
+    result['ava'] = ava
+
+    return result
+
+
 @app.route('/compute', methods=['GET', 'POST'])
 def compute():
-    # defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
+
     clearModeCtx()
     loadModeCtx()
-    app.logger.debug(session)
 
     if request.method == 'POST':
         # print request.__dict__
@@ -424,14 +507,7 @@ def compute():
         print filename
         phasearray = sample['phases']
         # selectedphases = [(d['name'], d['AMCSD_code']) for d in phasearray]
-
-        # Phase selection
-        selectedPhases = session['selected']
-        selectedphases = []
-        for i in range(len(selectedPhases)):
-            name, code = selectedPhases[i].split('\t')
-            code = int(code)
-            selectedphases.append((name, code))
+        print phasearray
 
         x = sample['x']
         y = sample['y']
@@ -439,71 +515,7 @@ def compute():
         diff = np.asfarray(np.array(y))
         userData = (angle, diff)
 
-        # TODO 2nd pass with selected
-
-        # Force Chemin for ODR
-        # Dif data captures all cristallographic data
-        # Load in the DB file
-        DBname = session['dbname']
-        difdata = open(DBname, 'r').readlines()
-
-        # Parse phases sent by ODR
-        print selectedphases
-
-        # Force mode
-        myMode = defaultMode
-        Lambda = myMode.qlambda
-        Target = myMode.qtarget
-        FWHMa = myMode.fwhma
-        FWHMb = myMode.fwhmb
-
-        # Boundaries check
-        if(Lambda > 2.2 or Lambda == 0):
-            Lambda = ''
-        if(FWHMa > 0.01):
-            FWHMa = 0.01
-        if(FWHMa < -0.01):
-            FWHMa = -0.01
-        if(FWHMb > 1.0):
-            FWHMb = 1.0
-        if(FWHMb < 0.01):
-            FWHMb = 0.01
-
-        InstrParams = {"Lambda": Lambda,
-                       "Target": Target,
-                       "FWHMa": FWHMa,
-                       "FWHMb": FWHMb}
-
-        results, BG, Sum, mineralpatterns = qxrd.Qanalyze(userData,
-                                                          difdata,
-                                                          selectedphases,
-                                                          InstrParams,
-                                                          session['autoremove'],
-                                                          True)
-
-        app.logger.warning('Length of angle array: %d', len(angle))
-        minerallist = [(l + BG).tolist() for l in mineralpatterns]
-        print len(minerallist)
-
-        xmin = min(angle)
-        xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
-        offset = Imax / 2 * 3
-        offsetline = [offset] * len(angle)
-
-        difference_magnification = 1
-        difference = (diff - Sum) * difference_magnification
-        # logging.debug(results)
-        # logging.info("Done with processing")
-        offsetdiff = difference + offset
-
-        # Serialize the entire thing
-        result = dict()
-        result['traces'] = minerallist
-        result['phases'] = results
-        result['bgpoly'] = BG.tolist()
-        result['sum'] = Sum.tolist()
-        result['difference'] = offsetdiff.tolist()
+        result = qxrd_worker(userData)
 
         return json.dumps(result)
     else:
@@ -569,7 +581,8 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -631,26 +644,34 @@ def loadModeCtx():
         inventory = defaultMode.inventory
         session['dbname'] = 'difdata_' + inventory + '.txt'
         session['selected'] = phaselist.rockPhases
-        app.logger.warning(
-            "loadModeCtx session['selected']: % s", session['selected'])
+        # app.logger.warning("loadModeCtx session['selected']: % s", session['selected'])
+        print session
 
 # [START process]
 
 
 @app.route('/chart', methods=['GET', 'POST'])
 def chart():
+    clearModeCtx()
+    loadModeCtx()
     # Load parameters for computation
     filename = session['filename']
     XRDdata = open(os.path.join('uploads', filename), 'r')
     userData = qxrdtools.openXRD(XRDdata, filename)
     angle = userData[0]
     diff = userData[1]
+
+    ava = rebal(session['selected'], 'rockforming')
     defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
+
     template_vars = {
         'angle': angle.tolist(),
         'diff': diff.tolist(),
         'samplename': filename,
-        'mode': defaultMode
+        'mode': defaultMode,
+        'availablephaselist': ava,
+        'selectedphaselist': session['selected']
+
     }
     return render_template('chart2.html', **template_vars)
 
@@ -662,9 +683,6 @@ def process():
 
     app.logger.warning('File:{}'.format(session['filename']))
     # Need to reset to initial as we are dealing with new file
-    clearModeCtx()
-    loadModeCtx()
-
     app.logger.debug(session)
 
     # Mode setup
