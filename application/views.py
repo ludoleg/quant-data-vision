@@ -129,29 +129,6 @@ class UploadForm(FlaskForm):
         ['txt', 'plv', 'csv', 'mdi', 'dif'], 'Only XRD files format such as .plv, .mdi, .csv, etc are accepted.')])
 
 
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    modeset = False
-    if current_user.is_authenticated:
-        mode = db.session.query(Mode).filter_by(
-            author_id=current_user.id).first()
-        if mode:
-            modeset = True
-            # app.logger.warning(session)
-
-    form = UploadForm()
-
-    if form.validate_on_submit():
-        f = form.file.data
-        filename = secure_filename(f.filename)
-        f.save(os.path.join(app.config['UPLOAD_FOLDER'],
-                            filename))
-        session['filename'] = filename
-        return redirect(url_for('chart'))
-    print form.errors
-    return render_template('index.html', form=form, mode=modeset)
-
-
 @app.route('/about')
 def about():
     return render_template('about.html')
@@ -463,8 +440,7 @@ def qxrd_worker(userData):
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -487,12 +463,57 @@ def qxrd_worker(userData):
     return result
 
 
-@app.route('/compute', methods=['GET', 'POST'])
-def compute():
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    modeset = False
+    if current_user.is_authenticated:
+        mode = db.session.query(Mode).filter_by(
+            author_id=current_user.id).first()
+        if mode:
+            modeset = True
+            # app.logger.warning(session)
 
+    form = UploadForm()
+
+    if form.validate_on_submit():
+        f = form.file.data
+        filename = secure_filename(f.filename)
+        f.save(os.path.join(app.config['UPLOAD_FOLDER'],
+                            filename))
+        session['filename'] = filename
+        return redirect(url_for('chart'))
+    print form.errors
+    return render_template('index.html', form=form, mode=modeset)
+
+
+@app.route('/chart', methods=['GET', 'POST'])
+def chart():
     clearModeCtx()
     loadModeCtx()
+    # Load parameters for computation
+    filename = session['filename']
+    XRDdata = open(os.path.join('uploads', filename), 'r')
+    userData = qxrdtools.openXRD(XRDdata, filename)
+    angle = userData[0]
+    diff = userData[1]
 
+    ava = rebal(session['selected'], 'rockforming')
+    defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
+
+    template_vars = {
+        'angle': angle.tolist(),
+        'diff': diff.tolist(),
+        'samplename': filename,
+        'mode': defaultMode,
+        'availablephaselist': ava,
+        'selectedphaselist': session['selected']
+
+    }
+    return render_template('chart2.html', **template_vars)
+
+
+@app.route('/compute', methods=['GET', 'POST'])
+def compute():
     if request.method == 'POST':
         # print request.__dict__
         # Load data from request
@@ -581,8 +602,7 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -648,32 +668,6 @@ def loadModeCtx():
         print session
 
 # [START process]
-
-
-@app.route('/chart', methods=['GET', 'POST'])
-def chart():
-    clearModeCtx()
-    loadModeCtx()
-    # Load parameters for computation
-    filename = session['filename']
-    XRDdata = open(os.path.join('uploads', filename), 'r')
-    userData = qxrdtools.openXRD(XRDdata, filename)
-    angle = userData[0]
-    diff = userData[1]
-
-    ava = rebal(session['selected'], 'rockforming')
-    defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
-
-    template_vars = {
-        'angle': angle.tolist(),
-        'diff': diff.tolist(),
-        'samplename': filename,
-        'mode': defaultMode,
-        'availablephaselist': ava,
-        'selectedphaselist': session['selected']
-
-    }
-    return render_template('chart2.html', **template_vars)
 
 
 @app.route('/process', methods=['GET', 'POST'])
@@ -764,7 +758,7 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
