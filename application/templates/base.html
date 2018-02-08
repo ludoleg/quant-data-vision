@@ -69,7 +69,6 @@
                     </li>
                     {% endif %}
                     {% if current_user.is_authenticated %}
-                    <li><a href="#">Active Mode: {{ modetitle }}</a></li>
                     <ul class="nav navbar-nav navbar-right">
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Hello, {{ current_user.name|capitalize }}<span class="caret"></span></a>
@@ -79,7 +78,7 @@
                         </li>
                     </ul>
                     {% else %}
-                    <li><a href='{{ url_for('users.login') }}'>Login</a></li>
+                    <li><a href='{{ url_for('users.login') }}'>Login <span class="glyphicon glyphicon-log-in"></span></a></li>
                     {% endif %}
                 </ul>
             </div><!--/.nav-collapse -->

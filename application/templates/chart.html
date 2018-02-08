@@ -2,11 +2,11 @@
 {% block title %}QAnalyze - XRD pattern chart{% endblock %}
 {% block content %}
 <div id="xrdplot" style="width:1200px;height:400px;"></div>
+<h4>Mode: {{ mode.title }}</h4>
+<h4>Database: {{ mode.inventory }}</h4>
 <div id="result" class="container">
     <div class="row">
         <div class="col-lg-3">
-            <h4>Mode: {{ mode.title }}</h4>
-            <h4>Database: {{ mode.inventory }}</h4>
             <button onclick="myFunction()">Add/Remove phase</button>
             <div>
             </div>
