@@ -143,9 +143,11 @@ def home():
         f.save(os.path.join(app.config['UPLOAD_FOLDER'],
                             filename))
         session['filename'] = filename
+        clearModeCtx()
+        loadModeCtx()
         return redirect(url_for('process'))
     print form.errors
-    return render_template('index.html', form=form, mode=modeset)
+    return render_template('index.html', form=form, modeset=modeset)
 
 
 @app.route('/about')
@@ -665,10 +667,7 @@ def process():
     if current_user.is_authenticated:
         app.logger.warning('User:{}'.format(current_user.name))
 
-    app.logger.warning('File:{}'.format(session['filename']))
     # Need to reset to initial as we are dealing with new file
-    clearModeCtx()
-    loadModeCtx()
 
     app.logger.debug(session)
 
