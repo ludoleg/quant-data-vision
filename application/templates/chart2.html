@@ -110,7 +110,6 @@
      $("#leftValues").append(selectedItem);
      sortSelectOptions("#leftValues");
      //     alert($('#rightValues').val() != null);
-     console.log($('#rightValues').text())
  });
 
 
@@ -261,20 +260,18 @@
          $('#addrm').show()
          $("#myModal").modal();
          plotdata.phases = $('#rightValues').text()
-         $.ajax({
-             type: 'POST',
-             url: '/compute',
-             data: JSON.stringify(plotdata),
-             success: function(results) {
-                 $('#result').show();
-                 console.log(results);
-                 graphs(results);
-             },
-             contentType: "application/json",
-             dataType: 'json'
-         });
+         axios.post('/compute', {
+             data: plotdata
+         })
+                                            .then(function (response) {
+                                                console.log(response);
+                                            })
+                                            .catch(function (error) {
+                                                console.log(error);
+                                            });
      });
  });
+
 
  var update = {
      x: {{ angle }},
