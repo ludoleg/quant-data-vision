@@ -520,9 +520,12 @@ def compute():
         # Ajax case
         if request.is_json:
             json_data = request.get_json()
-            data = json_data
+            plotdata = json_data
             # Regular post, text/plain encoded in body
-
+        else:
+            print 'Not a json request'
+        print plotdata
+        data = plotdata['data']
         sample = data['sample']
         filename = sample['name']
         print filename

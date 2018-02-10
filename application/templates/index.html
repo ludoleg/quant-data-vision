@@ -21,6 +21,7 @@
     <img id="image" src="/static/img/emptygraph.png" class="img-responsive">
     <input id="uploadFile" type="file" name="file" style="display: none;"/>
     {{ form.hidden_tag() }}
+    {{ form.csrf_token }}
   </form>
 </div>
 {% endif %}
