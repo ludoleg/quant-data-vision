@@ -1,4 +1,4 @@
-from flask import request, render_template, url_for, session, make_response, redirect, logging, json, flash
+from flask import request, render_template, url_for, session, make_response, redirect, logging, json, flash, g
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm
 from wtforms import FileField
@@ -380,7 +380,7 @@ def odr_post():
     return render_template('odr_post.html')
 
 
-def qxrd_worker(userData):
+def qxrd_worker(userData, phasearray, ar):
     angle = userData[0]
     diff = userData[1]
 
@@ -417,30 +417,32 @@ def qxrd_worker(userData):
                    "FWHMb": FWHMb}
 
     # Phase selection
-    selectedPhases = session['selected']
+    selectedPhases = phasearray
     selectedphases = []
     for i in range(len(selectedPhases)):
         name, code = selectedPhases[i].split('\t')
         code = int(code)
         selectedphases.append((name, code))
 
+    app.logger.warning('Autorm: %s', ar)
     results, BG, Sum, mineralpatterns = qxrd.Qanalyze(userData,
                                                       difdata,
                                                       selectedphases,
                                                       InstrParams,
-                                                      session['autoremove'],
+                                                      ar,
                                                       True)
-
+    print results
     session['results'] = results
     sel, ava = rebalance(results)
-    session['selected'] = sel
+    g.selected = sel
 
     minerallist = [(l + BG).tolist() for l in mineralpatterns]
     print len(minerallist)
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -489,6 +491,7 @@ def home():
 @app.route('/chart', methods=['GET', 'POST'])
 def chart():
     clearModeCtx()
+    g.autorm = True
     loadModeCtx()
     # Load parameters for computation
     filename = session['filename']
@@ -497,8 +500,7 @@ def chart():
     angle = userData[0]
     diff = userData[1]
 
-    ava = rebal(session['selected'], 'rockforming')
-    defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
+    ava = rebal(g.selected, 'rockforming')
 
     template_vars = {
         'angle': angle.tolist(),
@@ -506,8 +508,8 @@ def chart():
         'samplename': filename,
         'mode': defaultMode,
         'availablephaselist': ava,
-        'selectedphaselist': session['selected']
-
+        'selectedphaselist': g.selected,
+        'autorm': g.autorm
     }
     return render_template('chart2.html', **template_vars)
 
@@ -522,16 +524,12 @@ def compute():
             json_data = request.get_json()
             plotdata = json_data
             # Regular post, text/plain encoded in body
-        else:
-            print 'Not a json request'
-        print plotdata
+
         data = plotdata['data']
+        ar = data['autorm']
         sample = data['sample']
-        filename = sample['name']
-        print filename
         phasearray = sample['phases']
-        # selectedphases = [(d['name'], d['AMCSD_code']) for d in phasearray]
-        print phasearray
+        #selectedphases = [(d['name'], d['AMCSD_code']) for d in phasearray]
 
         x = sample['x']
         y = sample['y']
@@ -539,7 +537,7 @@ def compute():
         diff = np.asfarray(np.array(y))
         userData = (angle, diff)
 
-        result = qxrd_worker(userData)
+        result = qxrd_worker(userData, phasearray, ar)
 
         return json.dumps(result)
     else:
@@ -605,7 +603,8 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -650,7 +649,6 @@ def clearModeCtx():
 
 
 def loadModeCtx():
-    session['autoremove'] = True
     if current_user.is_authenticated:
         if 'mode' in session:
             mode = Mode.query.get(session['mode'])
@@ -660,13 +658,13 @@ def loadModeCtx():
                 author_id=current_user.id).first()
             # print mode.initial
         session['mode'] = mode.id
-        session['selected'] = mode.initial
+        g.selected = mode.initial
         session['dbname'] = 'difdata_' + mode.inventory + '.txt'
     else:
         # anonymous flow
         inventory = defaultMode.inventory
         session['dbname'] = 'difdata_' + inventory + '.txt'
-        session['selected'] = phaselist.rockPhases
+        g.selected = phaselist.rockPhases
         # app.logger.warning("loadModeCtx session['selected']: % s", session['selected'])
         print session
 
@@ -706,7 +704,7 @@ def process():
     difdata = open(DBname, 'r').readlines()
 
     # Phase selection
-    selectedPhases = session['selected']
+    selectedPhases = g.selected
 
     # selectedPhases = phaselist.defaultPhases
     # print selectedPhases
@@ -747,7 +745,7 @@ def process():
     app.logger.debug("Length of BG array: %s", len(BG))
     session['results'] = results
     sel, ava = rebalance(results)
-    session['selected'] = sel
+    g.selected = sel
     app.logger.debug(sel)
     # session['available'] = ava
 
@@ -761,7 +759,7 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -794,7 +792,8 @@ def process():
         'samplename': filename,
         'mode': myMode,
         'availablephaselist': ava,
-        'selectedphaselist': session['selected']
+        'selectedphaselist': session['selected'],
+        'autoremove': False
     }
     return render_template('chart.html', **template_vars)
 # [END process]

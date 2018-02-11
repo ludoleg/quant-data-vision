@@ -4,7 +4,7 @@
 <div id="xrdPlot" style="width:1200px;height:400px;"></div>
 <div class="container">
     <div class="container row">
-        <button id="analyze1" type="submit" class="btn btn-primary">Analyze 1</button>
+        <button id="analyze" class="btn btn-primary">Analyze</button>
         <button id='addrm' class="btn btn-primary" style="display: none">Add/Remove phase</button>
     </div>
     <div id="result" class="panel panel-default row" style="display: none">
@@ -68,10 +68,6 @@
                                 {% endif %}
                             </select>
                         </div>
-                        <div class="col-xs-3">
-                            <button id="analyze2" type="submit" class="btn btn-primary">Analyze 2</button>
-                        </div>
-
                     </div>
                 </div>
             </form>
@@ -96,13 +92,17 @@
     </div>
 </div>
 <script>
- var ph
- console.log($("#rightValues").text())
+
+// console.log($("#rightValues").val())
+
+// $("#rightValues").change(function(){
+//     console.log($(this).val());
+//  });
  
  $('#addrm').click(function(){
-     $('#analyze1').hide()
      $('#phaselist').toggle();
-     $('#result').hide();
+     $('#result').toggle();
+     plotdata.autorm = false;
  });
 
  $("#btnLeft").click(function () {
@@ -169,15 +169,17 @@
  var angle = {{ angle }}
  var diff = {{ diff }}
  var filename = '{{ samplename }}'
- console.log(angle)
+ var ph = {{ selectedphaselist|safe }}
+ // console.log(angle)
 
  var plotdata =
      {
+         'autorm': {{ autorm|tojson }},
          'sample': {
              'name': filename,
              'x': angle,
              'y': diff,
-             'phases': ''
+             'phases': ph,
          }
      }
 
@@ -254,21 +256,35 @@
  // }
 
  $(document).ready(function(){
-     $('#analyze1').click(function(){
+     $('#analyze').click(function(){
          $('#phaselist').hide()
-         $('#analyze1').hide()
          $('#addrm').show()
          $("#myModal").modal();
-         plotdata.phases = $('#rightValues').text()
+         // console.log($('#rightValues option'));
+         var values = $.map($('#rightValues option'), function(ele) {
+             return ele.value; 
+         });
+         // console.log(values);
+         plotdata.sample.phases = values;
          axios.post('/compute', {
              data: plotdata
          })
-                                            .then(function (response) {
-                                                console.log(response);
-                                            })
-                                            .catch(function (error) {
-                                                console.log(error);
-                                            });
+              .then(function (response) {
+                  $('#result').show();
+                  // console.log(response.data);
+                  $("#rightValues").empty();
+                  graphs(response.data);
+                  $.each(response.data.selected, function (i) {
+                      // console.log(response.data.selected[i]);
+                      $('#rightValues').append( '<option value="'+response.data.selected[i]+'">'+response.data.selected[i]+'</option>' );
+                  });
+                  $.each(response.data.ava, function (i) {
+                      $('#leftValues').append( '<option value="'+response.data.ava[i]+'">'+response.data.ava[i]+'</option>' );
+                  });
+              })
+              .catch(function (error) {
+                  console.log(error);
+              });
      });
  });
 
@@ -290,6 +306,7 @@
  var plotDiv = document.getElementById('xrdPlot');
  
  function graphs(results) {
+     $('.table').empty()
      var phases = '';
      for (var i = 0; i < results.phases.length; i++) {
          phases += '<tr>';
