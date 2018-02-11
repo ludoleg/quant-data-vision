@@ -214,10 +214,7 @@ def phase():
         print session['selected']
         # print '####### Inside Phase ####'
         # print session['available']
-        # app.logger.warning('Session[chemin]: %s', session['chemin'])
-        if session.has_key('chemin'):
-            app.logger.warning("Session['chemin']: %s", session['chemin'])
-            # if session['chemin']:
+        if request.form['origin'] == 'chemin':
             return redirect('/chemin_process')
         else:
             return redirect('/process')
@@ -441,7 +438,6 @@ def chemin():
         session['selected'] = phaselist.cheminPhases
         session['available'] = phaselist.availablePhases
         session['filename'] = filename
-        session['chemin'] = True
 
         x = [li['x'] for li in array]
         y = [li['y'] for li in array]
