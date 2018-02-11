@@ -1,30 +1,24 @@
 {% extends "base.html" %}
 {% block title %}QAnalyze - XRD pattern chart{% endblock %}
 {% block content %}
-<div id="xrdplot" style="width:1200px;height:400px;"></div>
-<div id="result" class="container">
-    <div class="row">
-        <div class="col-lg-3">
-            <h4>Mode: {{ mode.title }}</h4>
-            <h4>Database: {{ mode.inventory }}</h4>
-            <button onclick="myFunction()">Add/Remove phase</button>
-            <div>
-            </div>
-        </div>
+<div id="xrdPlot" style="width:1200px;height:400px;"></div>
+<div class="container row">
+    <h4>Mode: {{ mode.title }}</h4>
+    <h4>Database: {{ mode.inventory }}</h4>
+</div>
+<div class="container row form-group">
+    <button id="analyze" class="btn btn-primary">Analyze</button>
+    <button id='addrm' class="btn btn-primary" style="display: none">Add/Remove phase</button>
+</div>
+<div id="result" class="row panel panel-default row" style="display: none">
+    <div class="panel-body">
         <div class="col-lg-6">
             <table class="table table-bordered table-condensed" style="width: auto;">
 	        <tr>
 	            <th bgcolor="#DDDDDD">Phase</th>
 	            <th bgcolor="#DDDDDD">AMCSD Code #</th> 
 	            <th bgcolor="#DDDDDD">Mass %</th> 
-	        </tr>
-	        {%- for row in phaselist %}
-	        <tr>
-	            {%- for column in row %}
-	            <td class="col-md-3">{{ column }}</td>
-	            {%- endfor %}
-	        </tr>
-	        {%- endfor %}
+                </tr>
             </table>
         </div>
         <div class="col-lg-3">
@@ -34,50 +28,49 @@
         </div>
     </div>
 </div>
-<div id="phaselist" style="display: none">
-    <form novalidate
-          action="/phase"
-          method="POST"
-          enctype="multipart/form-data"
-          onsubmit="checkRightPane();">
-        <div class="container">
-            <div class="row">
-                <div class="col-xs-3">
-                    <h2><span class="control-label col-xs-3 form-control">Available Phases</span></h2>
+<div class="row panel panel-default" id="phaselist" style="display: none">
+    <div class="panel-body">
+        <form novalidate
+              action="/phase"
+              method="POST"
+              enctype="multipart/form-data"
+              onsubmit="checkRightPane();">
+            <div class="container">
+                <div class="row">
+                    <div class="col-xs-3">
+                        <h2><span class="control-label col-xs-3 form-control">Available Phases</span></h2>
+                    </div>
+                    <div class="col-xs-3">
+                    </div>
+                    <div class="col-xs-3">
+                        <h2><span class="control-label col-xs-3 form-control">Selected Phases</span></h2>
+                    </div>
                 </div>
-                <div class="col-xs-3">
-                </div>
-                <div class="col-xs-3">
-                    <h2><span class="control-label col-xs-3 form-control">Selected Phases</span></h2>
+                <div class="row">
+                    <div class="col-xs-3">
+                        <select name="availablephase" id="leftValues" multiple="multiple" class="form-control" size="10">
+                            {% for item in availablephaselist %}
+                            <option  value="{{ item }}">{{ item }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-xs-3" class="form-control">
+                        <input type="button" id="btnLeft" value="&lt;&lt;" />
+                        <input type="button" id="btnRight" value="&gt;&gt;" />
+                    </div>
+                    <div class="col-xs-3">
+                        <select name="selectedphase" id="rightValues" multiple="multiple" class="form-control" size="10" required>
+                            {% if (selectedphaselist is defined) and selectedphaselist %}
+                            {% for item in selectedphaselist %}
+                            <option  value="{{ item }}">{{ item }}</option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-xs-3">
-                    <select name="availablephase" id="leftValues" multiple="multiple" class="form-control" size="10">
-                        {% for item in availablephaselist %}
-                        <option  value="{{ item }}">{{ item }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-xs-3" class="form-control">
-                    <input type="button" id="btnLeft" value="&lt;&lt;" />
-                    <input type="button" id="btnRight" value="&gt;&gt;" />
-                </div>
-                <div class="col-xs-3">
-                    <select name="selectedphase" id="rightValues" multiple="multiple" class="form-control" size="10" required>
-	                {% if (selectedphaselist is defined) and selectedphaselist %}
-                        {% for item in selectedphaselist %}
-                        <option  value="{{ item }}">{{ item }}</option>
-                        {% endfor %}
-	                {% endif %}
-                    </select>
-                </div>
-                <div class="col-xs-3">
-                    <button id="analyze" type="submit" class="btn btn-primary">Analyze</button>
-                </div>
-            </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 <!-- Modal -->
 <div class="modal fade bs-example-modal-sm" id="myModal" role="dialog">
@@ -85,22 +78,30 @@
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-	        <h4 class="modal-title">Processing...</h4>
+	        <h4 class="modal-title">Search/Match analysis...</h4>
             </div>
             <div class="modal-body">
 	        <div class="progress progress-striped active">
 	            <div class="progress-bar progress-bar-info"  role="progressbar" style="width: 100%">
-	            </div>
-	        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 <script>
 
- // $("#analyze").click(function() {
+ // console.log($("#rightValues").val())
 
- // });
+ // $("#rightValues").change(function(){
+ //     console.log($(this).val());
+ //  });
+ 
+ $('#addrm').click(function(){
+     $('#phaselist').toggle();
+     $('#result').toggle();
+     plotdata.autorm = false;
+ });
 
  $("#btnLeft").click(function () {
      var selectedItem = $("#rightValues option:selected");
@@ -108,8 +109,8 @@
      sortSelectOptions("#leftValues");
      //     alert($('#rightValues').val() != null);
  });
- 
- 
+
+
  $("#btnRight").click(function () {
      var selectedItem = $("#leftValues option:selected");
      $("#rightValues").append(selectedItem);
@@ -119,9 +120,9 @@
  function sortSelectOptions(selectElement) {
      var options = $(selectElement + " option");
      options.sort(function(a,b) {
-	 if (a.text.toUpperCase() > b.text.toUpperCase()) return 1;
-	 else if (a.text.toUpperCase() < b.text.toUpperCase()) return -1;
-	 else return 0;
+         if (a.text.toUpperCase() > b.text.toUpperCase()) return 1;
+         else if (a.text.toUpperCase() < b.text.toUpperCase()) return -1;
+         else return 0;
      });
 
      $(selectElement).empty().append( options );
@@ -138,7 +139,7 @@
      }
  }
 
- 
+
  function selectAllOptions()
  {
      var selObj = document.getElementById('rightValues');
@@ -162,72 +163,48 @@
          x.style.display = "none";
      }
  }
- var list = {{ phaselist| safe }};
- var phases = '';
- for (var i = 0; i < list.length; i++) {
-     phases += list[i][0];
-     phases += ": ";
-     phases += list[i][2];
-     phases += "%<br>";
- }
+var results
+ var angle = {{ angle }}
+ var diff = {{ diff }}
+ var filename = '{{ samplename }}'
+ var ph = {{ selectedphaselist|tojson }}
+ // console.log(angle)
 
+ var plotdata =
+     {
+         'autorm': {{ autorm|tojson }},
+         'sample': {
+             'name': filename,
+             'x': angle,
+             'y': diff,
+             'phases': ph,
+         }
+     }
+
+ // $("#analyze").click(function() {
+
+ // });
  var trace1 = {
      x: {{ angle }},
      y: {{ diff }},
      mode: 'lines',
      line: {
-	 color: 'rgb(0,0,0)',
-	 width: 1
+         color: 'rgb(0,0,0)',
+         width: 1
      },
      name: 'Data',
      hoverinfo: 'none'
  };
 
- var trace2 = {
-     x: {{ angle }},
-     y: {{ bgpoly }},
-     mode: 'lines',
-     line: {
-	 color: 'rgb(0, 128, 0)',
-	 width: 1
-     },
-     name: 'Background',
-     hoverinfo: 'none'
- };
+ var graphdata = [trace1]
 
- var trace3 = {
-     x: {{ angle }},
-     y: {{ sum }},
-     mode: 'lines',
-     line: {
-	 color: 'rgb(0, 0, 255)',
-	 width: 1
-     },
-     name: 'Fit',
-     hoverinfo: 'none'
- };
-
- var trace4 = {
-     x: {{ angle }},
-     y: {{ difference }},
-     mode: 'lines',
-     line: {
-	 width: 1
-     },
-     name: 'Difference',
-     hoverinfo: 'none',
-     visible: 'legendonly'
- };
-
- var data = [trace1, trace2, trace3, trace4];
- 
  var layout = {
      /* annotations: [
-	{
-	x: 0.99,
-	y: 0.95,
-	xref: "paper",
-	yref: "paper",
+        {
+        x: 0.99,
+        y: 0.95,
+        xref: "paper",
+        yref: "paper",
         text: phases,
         showarrow: false,
         bgcolor: 'rgba(160, 236, 133, 0.7)',
@@ -241,54 +218,151 @@
      },
      title: '{{ samplename }}',
      xaxis: {
-	 showgrid: true,
-	 zeroline: true,
-	 showline: true,
-	 title: '2\u03B8 (deg)',
-	 gridwidth: 1,
-	 zerolinecolor: '#969696',
-	 zerolinewidth: 1,
-	 linecolor: '#636363',
-	 linewidth: 1,
-	 mirror: 'ticks',
-	 gridcolor: '#bdbdbd'
+         showgrid: true,
+         zeroline: true,
+         showline: true,
+         title: '2\u03B8 (deg)',
+         gridwidth: 1,
+         zerolinecolor: '#969696',
+         zerolinewidth: 1,
+         linecolor: '#636363',
+         linewidth: 1,
+         mirror: 'ticks',
+         gridcolor: '#bdbdbd'
      },
      yaxis: {
-	 title: 'Intensity',
-	 showgrid: true,
-	 zeroline: true,
-	 gridwidth: 1,
-	 showline: true,
-	 zerolinecolor: '#969696',
-	 zerolinewidth: 1,
-	 linecolor: '#636363',
-	 linewidth: 1,
-	 mirror: 'ticks',
-	 gridcolor: '#bdbdbd'
+         title: 'Intensity',
+         showgrid: true,
+         zeroline: true,
+         gridwidth: 1,
+         showline: true,
+         zerolinecolor: '#969696',
+         zerolinewidth: 1,
+         linecolor: '#636363',
+         linewidth: 1,
+         mirror: 'ticks',
+         gridcolor: '#bdbdbd'
      },
  };
 
- var minerals = {{ minerals }}
+ Plotly.newPlot(xrdPlot, graphdata, layout);
+ //Plotly.addTraces(xrdPlot, [trace4, trace5, trace6]);
+ // for (var i = 0; i < list.length; i++) {
+ //     update.y = minerals[i]
+ //     update.name = list[i][0]+' '+list[i][2]+'%'
+ //     Plotly.addTraces(xrdPlot, update);
+ // }
+
+ $(document).ready(function(){
+     $('#analyze').click(function(){
+         $('#phaselist').hide()
+         $('#addrm').show()
+         $("#myModal").modal();
+         // console.log($('#rightValues option'));
+         var values = $.map($('#rightValues option'), function(ele) {
+             return ele.value; 
+         });
+         // console.log(values);
+         plotdata.sample.phases = values;
+         axios.post('/compute', {
+             data: plotdata
+         })
+              .then(function (response) {
+                  $('#result').show();
+                  // console.log(response.data);
+                  $("#rightValues").empty();
+                  graphs(response.data);
+                  $.each(response.data.selected, function (i) {
+                      // console.log(response.data.selected[i]);
+                      $('#rightValues').append( '<option value="'+response.data.selected[i]+'">'+response.data.selected[i]+'</option>' );
+                  });
+                  $.each(response.data.ava, function (i) {
+                      $('#leftValues').append( '<option value="'+response.data.ava[i]+'">'+response.data.ava[i]+'</option>' );
+                  });
+              })
+              .catch(function (error) {
+                  console.log(error);
+              });
+     });
+ });
+
  var update = {
      x: {{ angle }},
      y: '',
      mode: 'lines',
      line: {
-	 width: 1
+         width: 1
      },
      name: '',
      hoverinfo: 'none',
      visible: 'legendonly'
  };
+
+ var visi = {
+     visible: 'true'
+ };
+ var plotDiv = document.getElementById('xrdPlot');
  
- Plotly.newPlot(xrdplot, data, layout);
- //Plotly.addTraces(xrdplot, [trace4, trace5, trace6]);
- for (var i = 0; i < list.length; i++) {
-     update.y = minerals[i]
-     update.name = list[i][0]+' '+list[i][2]+'%'
-     Plotly.addTraces(xrdplot, update);
+ function graphs(results) {
+     $('.table').empty();
+     $('.table').append('<tr><th bgcolor="#DDDDDD">Phase</th><th bgcolor="#DDDDDD">AMCSD Code #</th><th bgcolor="#DDDDDD">Mass %</th></tr>');
+
+     var phases = '';
+     for (var i = 0; i < results.phases.length; i++) {
+         phases += '<tr>';
+         phases += '<td class="col-md-3">'+results.phases[i][0]+'</td>';
+         phases += '<td class="col-md-3">'+results.phases[i][1]+'</td>';
+         phases += '<td class="col-md-3">'+results.phases[i][2]+'</td>';
+         phases += '</tr>';
+     }
+     $('.table').append(phases);
+     $('#result').show();
+     $('#myModal').modal('hide');
+     update.y = results.background;
+     update.name = "Background"
+     Plotly.addTraces(xrdPlot, update);
+     update.y = results.fit;
+     update.name = "Fit"
+     Plotly.addTraces(xrdPlot, update);
+     update.y = results.difference;
+     update.name = "Difference"
+     Plotly.addTraces(xrdPlot, update);
+     for (var i = 0; i < results.traces.length; i++) {
+         update.y = results.traces[i];
+         update.name = results.phases[i][0]+' '+results.phases[i][2]+'%'
+         Plotly.addTraces(xrdPlot, update);
+     }
+     Plotly.restyle(plotDiv, visi, [1,2]);
  }
- 
+
+ var data =
+     {"sample": {
+         "name": "Cumberland_reference",
+         "data": [
+             { "x": 3, "y": 7808 },
+             { "x": 3.05, "y": 7448 },
+             { "x": 3.1, "y": 6987 },
+             { "x": 3.15, "y": 7732 },
+             { "x": 3.2, "y": 6676 },
+             { "x": 3.25, "y": 6321 },
+             { "x": 3.3, "y": 6709 },
+             { "x": 3.35, "y": 5547 }
+         ]
+     },
+      "phases": [
+          { "name": "Andesine",  "AMCSD_code": 1052 },
+          { "name": "Anhydrite", "AMCSD_code": 5117 },
+          { "name": "Augite",    "AMCSD_code": 1 },
+          { "name": "Bassanite", "AMCSD_code": 13868 },
+          { "name": "Forsterite","AMCSD_code": 2674 },
+          { "name": "Hematite",  "AMCSD_code": 143 },
+          { "name": "Ilmenite",  "AMCSD_code": 9082 },
+          { "name": "Maghemite", "AMCSD_code": 7898 },
+          { "name": "Orthopyroxene", "AMCSD_code": 4556 },
+          { "name": "Pigeonite", "AMCSD_code": 209 },
+          { "name": "Fayalite",  "AMCSD_code": 174 },
+          { "name": "Sanidine",  "AMCSD_code": 10740 }
+ ]
+ }
 </script>
 {% endblock %}
-

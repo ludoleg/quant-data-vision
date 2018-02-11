@@ -46,22 +46,22 @@ class ModeTests(BaseTestCase):
     def test_user_anonymous(self):
         data = {}
         with open('Cumberland2.csv', 'rb') as f:
-            data['rockdatafile'] = (f, f.name)
+            data['file'] = (f, f.name)
             with self.client:
                 response = self.client.post(
-                    '/process', buffered=True,
+                    '/', buffered=True,
                     content_type='multipart/form-data',
                     data=data, follow_redirects=True
                 )
                 self.assertEqual(response.status_code, 200)
                 self.assertIn(b'Cumberland2', response.data)
-                self.assertIn(b'AMCSD', response.data)
+                self.assertIn(b'Data', response.data)
                 self.assertIn(b'Database: rockforming', response.data)
 
     def test_process_logged(self):
         data = {}
         with open('Cumberland2.csv', 'rb') as f:
-            data['rockdatafile'] = (f, f.name)
+            data['file'] = (f, f.name)
             with self.client:
                 self.client.post(
                     '/login',
@@ -69,7 +69,7 @@ class ModeTests(BaseTestCase):
                     follow_redirects=True
                 )
                 response = self.client.post(
-                    '/process', buffered=True,
+                    '/', buffered=True,
                     content_type='multipart/form-data',
                     data=data, follow_redirects=True
                 )
