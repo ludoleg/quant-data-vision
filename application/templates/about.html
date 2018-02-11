@@ -2,49 +2,30 @@
 {% block title %}QAnalyze: Mineral analysis using X-Ray Diffraction data{% endblock %}
 {% block content %}
 <div class="container">
-  <h2>Important note to users and testers</h2>
-  <p>
-    Qanalyze is in a still pre-beta phase.</p>
-  <h2>About XRD.Qanalyze</h2>
-  XRD.Qanalyze is an automated cloud-based application for quantitative analysis of mineral samples using X-ray diffraction (XRD) data.
-  It is currently free of charge and requires a google/gmail login.
-</p>
-<p>
-  Qanalyze applies full pattern fitting methods to compute mineral abundances from X-ray diffraction data.  
-  <br>
-  Qanalyze brings unsurpassed user-friendliness to XRD data analysis.
-</p>
-<p>
-  While Qanalyze principles are not limited to a particular type of XRD instrument, it is currently focused on data collected with portable and benchtop XRD instruments.
-</p>
-<p>
-  Qanalyze currently works best with a limited selection of phase candidates.
-  <br>
-  See and change the list in Settings > Set Phases.
-</p>
-<p>
-  Instrumental parameters vary from system to system.
-  <br>
-  For best results, set your instrument parameters in Settings > Calibration Parameters.
-</p>
-<p>
-  <u>Instructions</u>
-</p>
-<p>
-  1. Upload your XRD pattern  (formats currently accepted: txt, plv, mdi, dif)
-</p>
-<p>
-  2. Wait a few seconds
-</p>
-<p>
-  3. Review the results in a graph overlaying experimental and calculated data and a table listing minerals found and abundances.
-</p>
-<p>
-  4. Download  results in a CSV file.
-</p>
-<h2>About us</h2>
-<p>
-  Qanalyze is developed by a dedicated team of experienced software engineers and instrument scientists  based in California, USA.
-</p>
+    <h2>About QAnalyze</h2>
+    <p><b>QAnalyze</b> is an automated cloud-based application for quantitative analysis of mineral samples using X-ray diffraction (XRD) data.</p>
+    <p><b>QAnalyze</b> is currently free of charge.</p>
+    <p>It is recommended to register, login and create your own mode(s).  QAnalyze modes currently let you adjust, the wavelength of the tube, the instrumental peak broadening as two parameters a and b in FWHM(2&#x03B8) = a*2&#x03B8+b (as a first step, use a=0 and b=0.1 for lab diffractometer, 0.3 for portable XRD), the database (different subsets of AMCSD).</p>
+    <p>A sub-selection of minerals of the database can be made in <b><i>Settings > Set initial Phases</i></b> (<50 recommended).  For best performance, only select phases relevant to your sample type.  Create as many modes as needed for your different types of analyses.</p>
+    <p>After an XRD pattern is loaded, <b>QAnalyze</b> will:</p>
+    <p>1. Test each phase in the initial phase list, and discard it if it is not a match,<br>
+        2. Apply a full pattern fitting algorithm to the mineral mixture and compute mineral mass %. Phases that compute at negligeable % values are removed from the list.
+    </p>
+    <p>Only the crystalline portion of the sample are considered.  Amorphous materials in the sample are not taken into account in the % computation.</p>
+    <p>After the first automated cycle, the phase list can be modified in add/remove phases.  Automatic phase removal is disabled from this point, the user is in control.</p>
+    <p>QAnalyze principles are not limited to a particular type of XRD instrument, but it is currently focused on data collected with portable and benchtop XRD instruments.</p>
+    <p><u>Instructions</u></p>
+    <p>1. Login (register if needed)<br>
+        2. Choose/Create the mode of the analysis    <br>
+        3. Adjust the initial phase list if needed    <br>
+        4. Upload your XRD pattern (formats currently accepted: txt, csv, plv, mdi, dif)    <br>
+        5. Wait a few seconds     <br>
+        6. Review the results in the graph and the table listing the minerals mass %.    <br>
+        7. Manually add/remove phases if needed    <br>
+        8. Download results in a CSV file.    <br>
+    <h2>About us</h2>
+    <p>
+        <b>QAnalyze</b> is developed by a dedicated team of experienced software engineers and instrument scientists  based in California, USA.
+    </p>
 </div>
 {% endblock %}
