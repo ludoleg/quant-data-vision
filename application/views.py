@@ -414,8 +414,7 @@ def qxrd_worker(userData, phasearray, ar):
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -487,9 +486,11 @@ def loadModeCtx():
 
 @app.route('/chart', methods=['GET', 'POST'])
 def chart():
-    app.logger.info(session)
     clearModeCtx()
     loadModeCtx()
+
+    app.logger.info(session)
+
     # Load parameters for computation
     filename = session['filename']
     XRDdata = open(os.path.join('uploads', filename), 'r')
@@ -497,8 +498,8 @@ def chart():
     angle = userData[0]
     diff = userData[1]
 
-    ava = rebal(g.selected, 'rockforming')
-    print g.selected
+    ava = rebal(g.selected, g.mode.inventory)
+    app.logger.warning(g.selected)
 
     template_vars = {
         'angle': angle.tolist(),
@@ -637,7 +638,7 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                        :max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -734,8 +735,7 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -862,7 +862,8 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
