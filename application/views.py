@@ -780,7 +780,6 @@ def process():
     if current_user.is_authenticated:
         app.logger.warning('User:{}'.format(current_user.name))
 
-    app.logger.warning('File:{}'.format(session['filename']))
     # Need to reset to initial as we are dealing with new file
     app.logger.debug(session)
 
