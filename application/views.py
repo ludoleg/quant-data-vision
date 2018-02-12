@@ -1,4 +1,4 @@
-from flask import request, render_template, url_for, session, make_response, redirect, logging, json, flash
+from flask import request, render_template, url_for, session, make_response, redirect, logging, json, flash, g
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm
 from wtforms import FileField
@@ -39,27 +39,8 @@ if not os.path.isdir(UPLOAD_DIR):
 defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
 
 
-@app.context_processor
-def inject_title():
-    # app.logger.warning(session)
-    if current_user.is_authenticated:
-        if 'mode' in session:
-            mode = Mode.query.get(session['mode'])
-            title = mode.title
-        else:
-            app.logger.info('No mode has been initialized')
-            mode = db.session.query(Mode).filter_by(
-                author_id=current_user.id).first()
-            if mode:
-                session['mode'] = mode.id
-                app.logger.info('Mode has been initialized')
-                title = mode.title
-            else:
-                title = ''
-    else:
-        app.logger.info('Anonymous mode')
-        title = ''
-    return dict(modetitle=title)
+def before_request():
+    app.jinja_env.cache = {}
 
 
 def rebal(selected, inventory):
@@ -125,31 +106,6 @@ class UploadForm(FlaskForm):
         ['txt', 'plv', 'csv', 'mdi', 'dif'], 'Only XRD files format such as .plv, .mdi, .csv, etc are accepted.')])
 
 
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    modeset = False
-    if current_user.is_authenticated:
-        mode = db.session.query(Mode).filter_by(
-            author_id=current_user.id).first()
-        if mode:
-            modeset = True
-    # app.logger.warning(session)
-
-    form = UploadForm()
-
-    if form.validate_on_submit():
-        f = form.file.data
-        filename = secure_filename(f.filename)
-        f.save(os.path.join(app.config['UPLOAD_FOLDER'],
-                            filename))
-        session['filename'] = filename
-        clearModeCtx()
-        loadModeCtx()
-        return redirect(url_for('process'))
-    print form.errors
-    return render_template('index.html', form=form, modeset=modeset)
-
-
 @app.route('/about')
 def about():
     return render_template('about.html')
@@ -170,13 +126,14 @@ def setphase():
         mode.initial = selectedlist
         db.session.flush()
         db.session.commit()
-        session['autoremove'] = True
         app.logger.warning("Mode.initial: %s", mode.initial)
         return redirect('/')
     if request.method == 'GET':
-        mode = Mode.query.get(session['mode'])
+        if 'mode' in session:
+            mode = Mode.query.get(session['mode'])
+        else:
+            mode = Mode.query.filter_by(author_id=current_user.id).first()
         ava = rebal(mode.initial, mode.inventory)
-      # if session['mode']:
         #     mode = Mode.query.get(session['mode'])
         # else:
         #     mode = db.session.query(Mode).filter_by(
@@ -214,7 +171,9 @@ def phase():
         print session['selected']
         # print '####### Inside Phase ####'
         # print session['available']
+        # app.logger.warning('Session[chemin]: %s', session['chemin'])
         if request.form['origin'] == 'chemin':
+            app.logger.warning("Chemin path")
             return redirect('/chemin_process')
         else:
             return redirect('/process')
@@ -278,19 +237,17 @@ def phase():
 def modes():
     if request.method == 'GET':
         # myModes = db.session.query(Mode).filter(Mode.author_id == current_user.id)
-        myModes = db.session.query(Mode).filter_by(author_id=current_user.id)
+        # myModes = db.session.query(Mode).filter_by(author_id=current_user.id)
         # myModes = db.session.query(Mode).all()
-        # myModes = Mode.query.all()
+        myModes = Mode.query.filter_by(author_id=current_user.id).all()
         return render_template('modes.html', modes=myModes)
     if request.method == 'POST':
         modes_ids = request.form.getlist('mode_id', type=int)
-        # print modes_ids
+        print modes_ids
         for id in modes_ids:
-            if('mode' in session and session['mode'] == id):
-                session.pop('mode')
             m = Mode.query.get(id)
             db.session.delete(m)
-        db.session.commit()
+            db.session.commit()
         return redirect(url_for('modes'))
 
 
@@ -325,8 +282,6 @@ def createmodes():
                     fwhmb, inventory, initial, current_user.id)
         db.session.add(mode)
         db.session.commit()
-        if 'mode' not in session:
-            session['mode'] = mode.id
         return redirect(url_for('modes'))
 
 
@@ -359,8 +314,8 @@ def editmodes():
                 initial = sorted(phaselist.rockPhases)
             elif inventory == "chemin":
                 initial = sorted(phaselist.cheminPhases)
-            myMode.initial = initial
-        db.session.commit()
+                myMode.initial = initial
+                db.session.commit()
     return redirect(url_for('modes'))
 
 
@@ -376,15 +331,16 @@ def active_mode():
         # for key in multi_dict:
         #     print multi_dict.get(key)
         #     print multi_dict.getlist(key)
-        clearModeCtx()
-        mode_id = request.form['mode']
-        mode = Mode.query.get(mode_id)
-        session['mode'] = mode_id
+        session['mode'] = request.form['mode']
         # print mode_id, mode.id, session
         return redirect('/')
     if request.method == 'GET':
-        myModes = db.session.query(Mode).filter_by(author_id=current_user.id)
-        current_mode = Mode.query.get(session['mode'])
+        myModes = Mode.query.filter_by(author_id=current_user.id).all()
+        if 'mode' in session:
+            current_mode = Mode.query.get(session['mode'])
+        else:
+            current_mode = Mode.query.filter_by(
+                author_id=current_user.id).first()
         return render_template('activeMode.html', modes=myModes, current_mode=current_mode)
 
 
@@ -396,6 +352,190 @@ def odr_demo():
 @app.route('/odr_post')
 def odr_post():
     return render_template('odr_post.html')
+
+
+def qxrd_worker(userData, phasearray, ar):
+    angle = userData[0]
+    diff = userData[1]
+
+    # defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
+    app.logger.debug(session)
+    app.logger.warning('Length of angle array: %d', len(angle))
+
+    # Load inventory
+    DBname = session['dbname']
+    difdata = open(DBname, 'r').readlines()
+
+    # Mode
+    myMode = defaultMode
+    Lambda = myMode.qlambda
+    Target = myMode.qtarget
+    FWHMa = myMode.fwhma
+    FWHMb = myMode.fwhmb
+
+    # Boundaries check
+    if(Lambda > 2.2 or Lambda == 0):
+        Lambda = ''
+    if(FWHMa > 0.01):
+        FWHMa = 0.01
+    if(FWHMa < -0.01):
+        FWHMa = -0.01
+    if(FWHMb > 1.0):
+        FWHMb = 1.0
+    if(FWHMb < 0.01):
+        FWHMb = 0.01
+
+    InstrParams = {"Lambda": Lambda,
+                   "Target": Target,
+                   "FWHMa": FWHMa,
+                   "FWHMb": FWHMb}
+
+    # Phase selection
+    selectedPhases = phasearray
+    selectedphases = []
+    for i in range(len(selectedPhases)):
+        name, code = selectedPhases[i].split('\t')
+        code = int(code)
+        selectedphases.append((name, code))
+
+    app.logger.warning('Autorm: %s', ar)
+    results, BG, Sum, mineralpatterns = qxrd.Qanalyze(userData,
+                                                      difdata,
+                                                      selectedphases,
+                                                      InstrParams,
+                                                      ar,
+                                                      True)
+    app.logger.warning(results)
+    session['results'] = results
+    sel, ava = rebalance(results)
+    g.selected = sel
+
+    minerallist = [(l + BG).tolist() for l in mineralpatterns]
+
+    xmin = min(angle)
+    xmax = max(angle)
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    offset = Imax / 2 * 3
+    offsetline = [offset] * len(angle)
+
+    difference_magnification = 1
+    difference = (diff - Sum) * difference_magnification
+    # logging.debug(results)
+    # logging.info("Done with processing")
+    offsetdiff = difference + offset
+
+    # Serialize the entire thing
+    result = dict()
+    result['traces'] = minerallist
+    result['phases'] = results
+    result['background'] = BG.tolist()
+    result['fit'] = Sum.tolist()
+    result['difference'] = offsetdiff.tolist()
+    result['selected'] = sel  # session['selected']
+    result['ava'] = ava
+
+    return result
+
+
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    modeset = None
+    if current_user.is_authenticated:
+        mode = Mode.query.filter_by(author_id=current_user.id).first()
+        if mode:
+            modeset = True
+
+    form = UploadForm()
+
+    if form.validate_on_submit():
+        f = form.file.data
+        filename = secure_filename(f.filename)
+        f.save(os.path.join(app.config['UPLOAD_FOLDER'],
+                            filename))
+        session['filename'] = filename
+        return redirect(url_for('chart'))
+    return render_template('index.html', form=form, modeset=modeset)
+
+
+def loadModeCtx():
+    if current_user.is_authenticated:
+        if 'mode' in session:
+            mode = Mode.query.get(session['mode'])
+        else:
+            mode = Mode.query.filter_by(author_id=current_user.id).first()
+        g.selected = mode.initial
+        g.mode = mode
+        g.autorm = False
+        session['dbname'] = 'difdata_' + mode.inventory + '.txt'
+    else:
+        # anonymous flow
+        inventory = defaultMode.inventory
+        session['dbname'] = 'difdata_' + inventory + '.txt'
+        g.selected = phaselist.rockPhases
+        g.mode = defaultMode
+        g.autorm = True
+        # app.logger.warning("loadModeCtx session['selected']: % s", session['selected'])
+
+
+@app.route('/chart', methods=['GET', 'POST'])
+def chart():
+    app.logger.info(session)
+    clearModeCtx()
+
+    loadModeCtx()
+    # Load parameters for computation
+    filename = session['filename']
+    XRDdata = open(os.path.join('uploads', filename), 'r')
+    userData = qxrdtools.openXRD(XRDdata, filename)
+    angle = userData[0]
+    diff = userData[1]
+
+    ava = rebal(g.selected, 'rockforming')
+    print g.selected
+
+    template_vars = {
+        'angle': angle.tolist(),
+        'diff': diff.tolist(),
+        'samplename': filename,
+        'mode': g.mode,
+        'availablephaselist': ava,
+        'selectedphaselist': g.selected,
+        'autorm': g.autorm
+    }
+    return render_template('chart.html', **template_vars)
+
+
+@app.route('/compute', methods=['GET', 'POST'])
+def compute():
+    if request.method == 'POST':
+        # print request.__dict__
+        # Load data from request
+        # Ajax case
+        if request.is_json:
+            json_data = request.get_json()
+            plotdata = json_data
+            # Regular post, text/plain encoded in body
+
+        data = plotdata['data']
+        ar = data['autorm']
+        sample = data['sample']
+        phasearray = sample['phases']
+        # selectedphases = [(d['name'], d['AMCSD_code']) for d in phasearray]
+
+        x = sample['x']
+        y = sample['y']
+        angle = np.asfarray(np.array(x))
+        diff = np.asfarray(np.array(y))
+        userData = (angle, diff)
+
+        result = qxrd_worker(userData, phasearray, ar)
+
+        return json.dumps(result)
+    else:
+        return '''<html><body><h1>Did not get a post!</h1></body></html>'''
+    # [END ODR service]
+
+# [START odr second pass process, this is run when the user changes the phases and relaunch after the chemin call]
 
 
 # [START ODR service]
@@ -502,10 +642,11 @@ def chemin():
         offsetdiff = difference + offset
 
         csv = 'ODR'
+        session['results'] = results
+
         app.logger.warning('Length of angle array: %d', len(angle))
         minerallist = [(l + BG).tolist() for l in mineralpatterns]
 
-        session['results'] = results
         session['filename'] = filename
 
         cheminMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin', None, None)
@@ -525,12 +666,10 @@ def chemin():
             'availablephaselist': session['available'],
             'selectedphaselist': session['selected']
         }
-        return render_template('chart.html', **template_vars)
+        return render_template('chemin.html', **template_vars)
     else:
         return '''<html><body><h1>Did not get a post!</h1></body></html>'''
 # [END ODR service]
-
-# [START odr second pass process, this is run when the user changes the phases and relaunch after the chemin call]
 
 
 @app.route('/chemin_process', methods=['GET'])
@@ -541,10 +680,10 @@ def chemin_process():
     # Extract angle, diff to populate userData
     with open(os.path.join(app.config['UPLOAD_FOLDER'], filename)) as infile:
         array = json.load(infile)
-    x = [li['x'] for li in array]
-    y = [li['y'] for li in array]
-    angle = np.asfarray(np.array(x))
-    diff = np.asfarray(np.array(y))
+        x = [li['x'] for li in array]
+        y = [li['y'] for li in array]
+        angle = np.asfarray(np.array(x))
+        diff = np.asfarray(np.array(y))
 
     # Force mode
     Lambda = 0.0
@@ -589,8 +728,7 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -623,7 +761,7 @@ def chemin_process():
         'availablephaselist': session['available'],
         'selectedphaselist': session['selected']
     }
-    return render_template('chart.html', **template_vars)
+    return render_template('chemin.html', **template_vars)
 # [END process]
 
 
@@ -634,27 +772,6 @@ def clearModeCtx():
     session.pop('results', None)
 
 
-def loadModeCtx():
-    session['autoremove'] = True
-    if current_user.is_authenticated:
-        if 'mode' in session:
-            mode = Mode.query.get(session['mode'])
-        else:
-            # No mode has been selected yet - should all be replaced by a function activatemode
-            mode = db.session.query(Mode).filter_by(
-                author_id=current_user.id).first()
-        # print mode.initial
-        session['mode'] = mode.id
-        session['selected'] = mode.initial
-        session['dbname'] = 'difdata_' + mode.inventory + '.txt'
-    else:
-        # anonymous flow
-        inventory = defaultMode.inventory
-        session['dbname'] = 'difdata_' + inventory + '.txt'
-        session['selected'] = phaselist.rockPhases
-    app.logger.warning(
-        "loadModeCtx session['selected']: % s", session['selected'])
-
 # [START process]
 
 
@@ -664,7 +781,6 @@ def process():
         app.logger.warning('User:{}'.format(current_user.name))
 
     # Need to reset to initial as we are dealing with new file
-
     app.logger.debug(session)
 
     # Mode setup
@@ -687,11 +803,11 @@ def process():
     # print XRDdata, filename
 
     DBname = session['dbname']
-# Load in the DB file
+    # Load in the DB file
     difdata = open(DBname, 'r').readlines()
 
     # Phase selection
-    selectedPhases = session['selected']
+    selectedPhases = g.selected
 
     # selectedPhases = phaselist.defaultPhases
     # print selectedPhases
@@ -732,7 +848,7 @@ def process():
     app.logger.debug("Length of BG array: %s", len(BG))
     session['results'] = results
     sel, ava = rebalance(results)
-    session['selected'] = sel
+    g.selected = sel
     app.logger.debug(sel)
     # session['available'] = ava
 
@@ -746,8 +862,7 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])
-               :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -780,9 +895,10 @@ def process():
         'samplename': filename,
         'mode': myMode,
         'availablephaselist': ava,
-        'selectedphaselist': session['selected']
+        'selectedphaselist': session['selected'],
+        'autoremove': False
     }
-    return render_template('chart.html', **template_vars)
+    return render_template('chemin.html', **template_vars)
 # [END process]
 
 
@@ -823,7 +939,7 @@ def csvDownload():
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # def compute_mean_std(filename=None):
 
@@ -885,7 +1001,7 @@ def reformat(results):
         if any(word in name[i] for word in selected):
             # print i, name[i]
             del name[i], code[i]
-        i += 1
+            i += 1
 
     for i in range(len(name)):
         available.append(name[i] + '\t' + code[i])
