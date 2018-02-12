@@ -184,6 +184,8 @@
  // $("#analyze").click(function() {
 
  // });
+
+
  var trace1 = {
      x: {{ angle }},
      y: {{ diff }},
@@ -245,14 +247,19 @@
      },
  };
 
- Plotly.newPlot(xrdPlot, graphdata, layout);
+ var plotDiv = document.getElementById('xrdPlot');
+
+ Plotly.newPlot(plotDiv, graphdata, layout);
  //Plotly.addTraces(xrdPlot, [trace4, trace5, trace6]);
  // for (var i = 0; i < list.length; i++) {
  //     update.y = minerals[i]
  //     update.name = list[i][0]+' '+list[i][2]+'%'
  //     Plotly.addTraces(xrdPlot, update);
  // }
-
+ 
+ var graphData = plotDiv.data
+ //  console.log(graphData)
+ 
  $(document).ready(function(){
      $('#analyze').click(function(){
          $('#phaselist').hide()
@@ -301,9 +308,16 @@
  var visi = {
      visible: 'true'
  };
- var plotDiv = document.getElementById('xrdPlot');
+
+ var traces_idx = []
  
  function graphs(results) {
+     var j = 1;
+     // console.log(graphData)
+     // l = graphData.length
+     Plotly.deleteTraces(plotDiv, traces_idx)
+     traces_idx.length = 0
+     // console.log(graphData)
      $('.table').empty();
      $('.table').append('<tr><th bgcolor="#DDDDDD">Phase</th><th bgcolor="#DDDDDD">AMCSD Code #</th><th bgcolor="#DDDDDD">Mass %</th></tr>');
 
@@ -320,17 +334,21 @@
      $('#myModal').modal('hide');
      update.y = results.background;
      update.name = "Background"
-     Plotly.addTraces(xrdPlot, update);
+     Plotly.addTraces(plotDiv, update);
+     traces_idx.push(j++)
      update.y = results.fit;
      update.name = "Fit"
-     Plotly.addTraces(xrdPlot, update);
+     Plotly.addTraces(plotDiv, update);
+     traces_idx.push(j++)
      update.y = results.difference;
      update.name = "Difference"
-     Plotly.addTraces(xrdPlot, update);
+     Plotly.addTraces(plotDiv, update);
+     traces_idx.push(j++)
      for (var i = 0; i < results.traces.length; i++) {
+         traces_idx.push(j++)
          update.y = results.traces[i];
          update.name = results.phases[i][0]+' '+results.phases[i][2]+'%'
-         Plotly.addTraces(xrdPlot, update);
+         Plotly.addTraces(plotDiv, update);
      }
      Plotly.restyle(plotDiv, visi, [1,2]);
  }
@@ -362,7 +380,7 @@
           { "name": "Pigeonite", "AMCSD_code": 209 },
           { "name": "Fayalite",  "AMCSD_code": 174 },
           { "name": "Sanidine",  "AMCSD_code": 10740 }
- ]
- }
+      ]
+     }
 </script>
 {% endblock %}
