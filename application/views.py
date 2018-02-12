@@ -414,7 +414,8 @@ def qxrd_worker(userData, phasearray, ar):
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -457,15 +458,23 @@ def home():
     return render_template('index.html', form=form, modeset=modeset)
 
 
+def clearModeCtx():
+    session.pop('dbname', None)
+    session.pop('available', None)
+    session.pop('selected', None)
+    session.pop('autoremove', None)
+    session.pop('results', None)
+
+
 def loadModeCtx():
     if current_user.is_authenticated:
+        g.autorm = True
         if 'mode' in session:
             mode = Mode.query.get(session['mode'])
         else:
             mode = Mode.query.filter_by(author_id=current_user.id).first()
         g.selected = mode.initial
         g.mode = mode
-        g.autorm = False
         session['dbname'] = 'difdata_' + mode.inventory + '.txt'
     else:
         # anonymous flow
@@ -473,7 +482,6 @@ def loadModeCtx():
         session['dbname'] = 'difdata_' + inventory + '.txt'
         g.selected = phaselist.rockPhases
         g.mode = defaultMode
-        g.autorm = True
         # app.logger.warning("loadModeCtx session['selected']: % s", session['selected'])
 
 
@@ -481,7 +489,6 @@ def loadModeCtx():
 def chart():
     app.logger.info(session)
     clearModeCtx()
-
     loadModeCtx()
     # Load parameters for computation
     filename = session['filename']
@@ -630,8 +637,7 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-                   :max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                        :max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -728,7 +734,8 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -763,13 +770,6 @@ def chemin_process():
     }
     return render_template('chemin.html', **template_vars)
 # [END process]
-
-
-def clearModeCtx():
-    session.pop('dbname', None)
-    session.pop('selected', None)
-    session.pop('autoremove', None)
-    session.pop('results', None)
 
 
 # [START process]
@@ -862,7 +862,7 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
