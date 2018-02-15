@@ -257,14 +257,17 @@ def createmodes():
     if request.method == 'GET':
         return render_template('modesCreate.html')
     if request.method == 'POST':
+        if request.is_json:
+            json_data = request.get_json()
+            print json_data
         # print current_user.id
         # print current_user.name
-        title = request.form['modeTitle']
-        qlambda = request.form['lambda']
-        target = request.form['target']
-        fwhma = request.form['fwhma']
-        fwhmb = request.form['fwhmb']
-        inventory = request.form['inventory']
+        title = json_data['modeTitle']
+        qlambda = json_data['lambda']
+        target = json_data['target']
+        fwhma = json_data['fwhma']
+        fwhmb = json_data['fwhmb']
+        inventory = json_data['inventory']
         # populate initial list
         if inventory == "cement":
             initial = sorted(phaselist.cementPhases)
@@ -282,7 +285,8 @@ def createmodes():
                     fwhmb, inventory, initial, current_user.id)
         db.session.add(mode)
         db.session.commit()
-        return redirect(url_for('modes'))
+        # return redirect(url_for('modes'))
+    return json.dumps({'message': 'All good'})
 
 
 @login_required
