@@ -1,106 +1,117 @@
 {% extends "base.html" %}
-{% block title %}Mode- Add{% endblock %}
+{% block title %}Mode - Add{% endblock %}
 {% block content %}
 <div class="page-header">
-  <h3>Create Mode</h3>
+    <h3>Create Mode</h3>
 </div>
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <a href="/modes" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-arrow-left"></span>  Back to List</a>
-  </div>
-  <div class="panel-body">
-    <form id="mode-entry" class="form-horizontal" role="form" method="post" action="/modes/create">
-      <div class="form-group">
-        <label class="col-lg-2 control-label" for="">Name</label>
-        <div class="col-lg-4">
-          <input data-placement="top" data-toggle="tooltip" title="Choose the name of your mode." type="text" class="form-control" id="modeTitle" name="modeTitle" placeholder="Mode Name" autofocus required/>
+<div id="app" v-cloak>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <a href="/modes" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-arrow-left"></span>  Back to List</a>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="col-lg-2 control-label" for="">Lambda</label>
-        <div class="col-lg-4">
-          <input data-placement="top" data-toggle="tooltip" title="Enter 0 for automatic assignment based on target or a value in Angstrom, such as 1.79027." type="text" class="form-control" id="lambda" name="lambda" value="0" required/>
+        <div class="panel-body">
+            <form @submit.prevent id="mode-entry" class="form-horizontal" role="form" method="post">
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">Name</label>
+                    <div class="col-lg-4">
+                        <input v-model="form.modeTitle" placeholder="Mode name" data-placement="top" data-toggle="tooltip" title="Choose the name of your mode." type="text" class="form-control" name="modeTitle" autofocus required/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">Lambda</label>
+                    <div class="col-lg-4">
+                        <input v-model="form.lambda" data-placement="top" data-toggle="tooltip" title="Enter 0 for automatic assignment based on target or a value in Angstrom, such as 1.79027." type="text" name="lambda" class="form-control" required/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">Target</label>
+                    <div class="col-lg-4">
+                        <select class="form-control" v-model="form.target" name="target">
+                            <option v-for="option in options.target" v-bind:value="option.value">[[ option.text ]]</option>
+                        </select>
+                    </div>                    
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">FWHMA</label>
+                    <div class="col-lg-4">
+                        <input v-model="form.fwhma" data-placement="top" data-toggle="tooltip" title="Peak broadening curve slope A in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhma" name="fwhma" required/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">FWHMB</label>
+                    <div class="col-lg-4">
+                        <input v-model="form.fwhmb" data-placement="top" data-toggle="tooltip" title="Peak broadening curve offset B in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhmb" name="fwhmb" required/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">Mineral DB</label>
+                    <div class="col-lg-4">
+                        <select class="form-control" v-model="form.inventory" name="inventory">
+                            <option v-for="option in options.inventory" v-bind:value="option.value">[[ option.text ]]</option>
+                        </select>
+                    </div>                    
+                </div>
+                <div class="form-group">
+                    <div class="col-lg-offset-2 col-lg-4">
+                        <button v-on:click="handleSubmit()" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </formb>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="col-lg-2 control-label" for="">Target</label>
-        <div class="col-lg-4">
-          <select id="class" class="form-control" name="target">
-            <option>Cu</option>
-            <option>Co</option>
-          </select>
-        </div>                    
-      </div>
-      <div class="form-group">
-        <label class="col-lg-2 control-label" for="">FWHMA</label>
-        <div class="col-lg-4">
-          <input data-placement="top" data-toggle="tooltip" title="Peak broadening curve slope A in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhma" name="fwhma" value="0.0" required/>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="col-lg-2 control-label" for="">FWHMB</label>
-        <div class="col-lg-4">
-          <input data-placement="top" data-toggle="tooltip" title="Peak broadening curve offset B in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhmb" name="fwhmb" value="0.3" required/>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-lg-2 control-label" for="">Mineral DB</label>
-        <div class="col-lg-4">
-          <select id="class" class="form-control" name="inventory">
-            <option value="rockforming">Rock Forming</option>
-            <option value="cement">Cement</option>
-            <option value="pigment">Pigment</option>
-            <option value="chemin">Chemin</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="col-lg-offset-2 col-lg-4">
-          <button type="submit" class="btn btn-primary">Submit</button>
-        </div>
-      </div>
-    </form>
-  </div>
+    </div>
 </div>
+<script src="https://unpkg.com/vue@2.5.13/dist/vue.js"></script>
+<script type="text/javascript">
+new Vue({
+     el: '#app',
+     delimiters: ['[[',']]'],
+     data: {
+         form: {
+             modeTitle: '',
+             lambda: 0,
+             target: 'Cu',
+             fwhma: 0.0,
+             fwhmb: 0.3,
+             inventory: 'rockforming'
+         },
+         options: {
+             target: [
+                 { value: 'Cu', text: "Cu"},
+                 { value: 'Co', text: "Co"}
+             ],
+             inventory: [ { value: 'rockforming', text: "Rock Forming"},
+                          { value: 'pigment', text: "Pigment"},
+                          { value: 'cement', text: "Cement"},
+                          { value: 'chemin', text: "Chemin"}]
+         }
+     },
+     methods: {
+         handleSubmit () {
+             console.log(this.form);
+             axios.post('/modes/create', this.form )
+                  .then(function (response) {
+                      console.log(response);
+                  })
+                  .catch(function (error) {
+                      console.log(error);
+                  });
+         }
+     }
+ });
+</script>
 {% endblock %}
-	    {% block footer_script %}
-	    <script>
-              $(function () {
-              var t = new Date();
-              var dd = t.getDate();
-              if (dd < 10)
-                       dd = "0" + dd;
 
-		       var mm = t.getMonth() + 1;
-		       if (mm < 10)
-				mm = "0" + mm;
-
-				var yyyy = t.getFullYear();
-
-				$("#date_of_birth").val(dd + '-' + mm + '-' + yyyy);
-				$("#date_of_birth").datepicker({ dateFormat: 'dd-mm-yy',changeMonth: true, changeYear: true });
-				});
-
-
-				// jQuery plugin to prevent double submission of forms
-				jQuery.fn.preventDoubleSubmission = function () {
-				$(this).on('submit', function (e) {
-				var $form = $(this);
-
-				if ($form.data('submitted') === true) {
-				// Previously submitted - don't submit again
-				e.preventDefault();
-				} else {
-                    // Mark it so that the next submit can be ignored
-                    $form.data('submitted', true);
-                }
-            });
-
-            // Keep chainability
-            return this;
-        };
-
-        $('form').preventDoubleSubmission();
-    </script>
-{% endblock %}
+<!--
+     Axios({
+     method: 'post',
+     url: '/xxx',
+     headers: {
+     'Content-Type': 'application/x-www-form-urlencoded'
+     },
+     data: param
+     }).then(response => {
+     dispatch(loginSuccess(response.data))
+     })
+     .catch(error => {
+     throw(error);
+     }); -->

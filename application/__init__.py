@@ -27,6 +27,9 @@ app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
 app.logger.info('Welcome to Qanalyze')
 
+app.jinja_env.auto_reload = True
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+
 import logging
 stream_handler = logging.StreamHandler()
 app.logger.addHandler(stream_handler)

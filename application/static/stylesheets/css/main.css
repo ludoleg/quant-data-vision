@@ -1,4 +1,2 @@
-body {
-  font-family: Verdana, Helvetica, sans-serif;
-  background-color: #DDDDDD;
-}
+[v-cloak] {display: none}
+
