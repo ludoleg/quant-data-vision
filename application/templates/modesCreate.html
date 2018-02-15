@@ -1,142 +1,117 @@
-<!DOCTYPE html>
-<html >
-<head>
-  <meta charset="UTF-8">
-  <title>Vue.js v2.0 - CRUD application</title>
-
-
-  <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css'>
-  <link rel='stylesheet prefetch' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.min.css'>
-  <link rel="stylesheet" href="{{ url_for('static', filename='stylesheets/css/ludo.css') }}">
-
-</head>
-
-<body>
-<div class="container">
-  <header class="page-header">
-    <div class="branding">
-      <img src="https://vuejs.org/images/logo.png" alt="Logo" title="Home page" class="logo"/>
-      <h1>Vue.js v2 CRUD</h1>
-    </div>
-  </header>
-  <main id="app"></main>
+{% extends "base.html" %}
+{% block title %}Mode - Add{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h3>Create Mode</h3>
 </div>
-
-<template id="product-list">
-  <section>
-  <div class="actions">
-    <router-link class="btn btn-default" :to="{path: '/add-product'}">
-      <span class="glyphicon glyphicon-plus"></span>
-      Add product
-    </router-link>
-  </div>
-  <div class="filters row">
-    <div class="form-group col-sm-3">
-      <label for="search-element">Product name</label>
-      <input v-model="searchKey" class="form-control" id="search-element" requred/>
+<div id="app" v-cloak>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <a href="/modes" class="btn btn-default btn-sm"><span class="glyphicon glyphicon-arrow-left"></span>  Back to List</a>
+        </div>
+        <div class="panel-body">
+            <form @submit.prevent id="mode-entry" class="form-horizontal" role="form" method="post">
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">Name</label>
+                    <div class="col-lg-4">
+                        <input v-model="form.modeTitle" placeholder="Mode name" data-placement="top" data-toggle="tooltip" title="Choose the name of your mode." type="text" class="form-control" name="modeTitle" autofocus required/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">Lambda</label>
+                    <div class="col-lg-4">
+                        <input v-model="form.lambda" data-placement="top" data-toggle="tooltip" title="Enter 0 for automatic assignment based on target or a value in Angstrom, such as 1.79027." type="text" name="lambda" class="form-control" required/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">Target</label>
+                    <div class="col-lg-4">
+                        <select class="form-control" v-model="form.target" name="target">
+                            <option v-for="option in options.target" v-bind:value="option.value">[[ option.text ]]</option>
+                        </select>
+                    </div>                    
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">FWHMA</label>
+                    <div class="col-lg-4">
+                        <input v-model="form.fwhma" data-placement="top" data-toggle="tooltip" title="Peak broadening curve slope A in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhma" name="fwhma" required/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">FWHMB</label>
+                    <div class="col-lg-4">
+                        <input v-model="form.fwhmb" data-placement="top" data-toggle="tooltip" title="Peak broadening curve offset B in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhmb" name="fwhmb" required/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" for="">Mineral DB</label>
+                    <div class="col-lg-4">
+                        <select class="form-control" v-model="form.inventory" name="inventory">
+                            <option v-for="option in options.inventory" v-bind:value="option.value">[[ option.text ]]</option>
+                        </select>
+                    </div>                    
+                </div>
+                <div class="form-group">
+                    <div class="col-lg-offset-2 col-lg-4">
+                        <button v-on:click="handleSubmit()" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </formb>
+        </div>
     </div>
-  </div>
-  <table class="table">
-    <thead>
-    <tr>
-      <th>Name</th>
-      <th>Description</th>
-      <th>Price</th>
-      <th class="col-sm-2">Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr v-for="product in filteredProducts">
-      <td>
-        <router-link :to="{name: 'product', params: {product_id: product.id}}">{% raw %}{{ product.name }}{% endraw %}</router-link>
-      </td>
-      <td>{% raw %}{{ product.description }}{% endraw %}</td>
-      <td>
-        {% raw %}{{ product.price }}{% endraw %}
-        <span class="glyphicon glyphicon-euro" aria-hidden="true"></span>
-      </td>
-      <td>
-        <router-link class="btn btn-warning btn-xs" :to="{name: 'product-edit', params: {product_id: product.id}}">Edit</router-link>
-        <router-link class="btn btn-danger btn-xs" :to="{name: 'product-delete', params: {product_id: product.id}}">Delete</router-link>
-      </td>
-    </tr>
-    </tbody>
-  </table>
-  </section>
-</template>
-
-<template id="add-product">
-    <section>
-  <h2>Add new product</h2>
-  <form v-on:submit="createProduct">
-    <div class="form-group">
-      <label for="add-name">Name</label>
-      <input class="form-control" id="add-name" v-model="product.name" required/>
-    </div>
-    <div class="form-group">
-      <label for="add-description">Description</label>
-      <textarea class="form-control" id="add-description" rows="10" v-model="product.description"></textarea>
-    </div>
-    <div class="form-group">
-      <label for="add-price">Price, <span class="glyphicon glyphicon-euro"></span></label>
-      <input type="number" class="form-control" id="add-price" v-model="product.price"/>
-    </div>
-    <button type="submit" class="btn btn-primary">Create</button>
-    <router-link to="'/'" class="btn btn-default">Cancel</router-link>
-  </form>
-</section>
-</template>
-
-<template id="product">
-    <section>
-  <h2>{% raw %}{{ product.name }}{% endraw %}</h2>
-  <b>Description: </b>
-  <div>{% raw %}{{ product.description }}{% endraw %}</div>
-  <b>Price:</b>
-  <div>{% raw %}{{ product.price }}{% endraw %}<span class="glyphicon glyphicon-euro"></span></div>
-  <br/>
-  <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
-  <router-link to="'/'">Back to product list</router-link>
-</section>
-</template>
-
-<template id="product-edit">
-    <section>
-  <h2>Edit product</h2>
-  <form v-on:submit="updateProduct">
-    <div class="form-group">
-      <label for="edit-name">Name</label>
-      <input class="form-control" id="edit-name" v-model="product.name" required/>
-    </div>
-    <div class="form-group">
-      <label for="edit-description">Description</label>
-      <textarea class="form-control" id="edit-description" rows="3" v-model="product.description"></textarea>
-    </div>
-    <div class="form-group">
-      <label for="edit-price">Price, <span class="glyphicon glyphicon-euro"></span></label>
-      <input type="number" class="form-control" id="edit-price" v-model="product.price"/>
-    </div>
-    <button type="submit" class="btn btn-primary">Save</button>
-    <router-link to="'/'" class="btn btn-default">Cancel</router-link>
-  </form>
-</section>
-</template>
-
-<template id="product-delete">
-    <section>
-  <h2>Delete product {% raw %}{{ product.name }}{% endraw %}</h2>
-  <form v-on:submit="deleteProduct">
-    <p>The action cannot be undone.</p>
-    <button type="submit" class="btn btn-danger">Delete</button>
-    <router-link to="'/'" class="btn btn-default">Cancel</router-link>
-  </form>
-</section>
-</template>
-
-
+</div>
 <script src="https://unpkg.com/vue@2.5.13/dist/vue.js"></script>
-<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
-<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+<script type="text/javascript">
+new Vue({
+     el: '#app',
+     delimiters: ['[[',']]'],
+     data: {
+         form: {
+             modeTitle: '',
+             lambda: 0,
+             target: 'Cu',
+             fwhma: 0.0,
+             fwhmb: 0.3,
+             inventory: 'rockforming'
+         },
+         options: {
+             target: [
+                 { value: 'Cu', text: "Cu"},
+                 { value: 'Co', text: "Co"}
+             ],
+             inventory: [ { value: 'rockforming', text: "Rock Forming"},
+                          { value: 'pigment', text: "Pigment"},
+                          { value: 'cement', text: "Cement"},
+                          { value: 'chemin', text: "Chemin"}]
+         }
+     },
+     methods: {
+         handleSubmit () {
+             console.log(this.form);
+             axios.post('/modes/create', this.form )
+                  .then(function (response) {
+                      console.log(response);
+                  })
+                  .catch(function (error) {
+                      console.log(error);
+                  });
+         }
+     }
+ });
+</script>
+{% endblock %}
 
-</body>
-</html>
+<!--
+     Axios({
+     method: 'post',
+     url: '/xxx',
+     headers: {
+     'Content-Type': 'application/x-www-form-urlencoded'
+     },
+     data: param
+     }).then(response => {
+     dispatch(loginSuccess(response.data))
+     })
+     .catch(error => {
+     throw(error);
+     }); -->
