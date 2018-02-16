@@ -7,7 +7,7 @@ var List = Vue.extend({
             searchKey: ''
         };
     },
-    mounted: function() {
+    created: function() {
         axios.post('/mode')
             .then((response) => {
                 console.log(response);
@@ -145,9 +145,9 @@ var AddMode = Vue.extend({
         return {
             form: {
                 title: '',
-                lambda: 0,
+                lambda: parseFloat(0),
                 target: 'Cu',
-                fwhma: 0.0,
+                fwhma: parseFloat(0),
                 fwhmb: 0.3,
                 inventory: 'rockforming'
             },
