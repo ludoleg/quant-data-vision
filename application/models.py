@@ -1,4 +1,4 @@
-from application import db, bcrypt, login_manager
+from application import db, bcrypt, login_manager, ma
 from flask_login import UserMixin
 
 
@@ -58,3 +58,10 @@ class Mode(db.Model):
 
     def __repr__(self):
         return "<Mode(title='%s', qlambda='%.2f', qtarget='%s', fwhma='%.2f', fwhmb='%.2f', inventory='%s,'id='%s')>" % (self.title, self.qlambda, self.qtarget, self.fwhma, self.fwhmb, self.inventory, self.author_id)
+
+
+class ModeSchema(ma.ModelSchema):
+    class Meta:
+        model = Mode
+        fields = ('id', 'title', 'qlambda', 'fwhma',
+                  'fwhmb', 'qtarget', 'inventory')

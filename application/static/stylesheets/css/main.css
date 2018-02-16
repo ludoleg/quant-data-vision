@@ -1,2 +1,11 @@
 [v-cloak] {display: none}
 
+.logo {
+    width: 50px;
+    float: left;
+    margin-right: 15px;
+}
+
+.actions {
+    padding: 10px 0;
+}
