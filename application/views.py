@@ -1,10 +1,12 @@
-from flask import request, render_template, url_for, session, make_response, redirect, logging, json, flash, g
+from flask import request, render_template, url_for, session, make_response, redirect, logging, json, flash, g, jsonify
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm
 from wtforms import FileField
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 from flask_login import login_required, current_user
+from marshmallow import Schema, pprint
+
 
 from application import app
 
@@ -19,7 +21,7 @@ import qxrd
 import qxrdtools
 import phaselist
 
-from models import *
+from models import Mode, ModeSchema, db
 from users.views import users_blueprint
 
 app.register_blueprint(users_blueprint)
@@ -113,8 +115,8 @@ def about():
 # This will reset the starting line up for the phases
 
 
-@login_required
 @app.route('/setphase', methods=['GET', 'POST'])
+@login_required
 def setphase():
     if request.method == 'POST':
         modeid = request.form['modeid']
@@ -232,6 +234,22 @@ def phase():
     # return return_str
 
 
+@app.route('/mode', methods=['GET', 'POST'])
+@login_required
+def mode():
+    if request.method == 'GET':
+        return render_template('mode.html')
+    if request.method == 'POST':
+        all_modes = Mode.query.filter_by(author_id=current_user.id).all()
+        # mode_schema = ModeSchema()
+        # many needed for multiple
+        # result = mode_schema.dump(all_modes)
+        modes_schema = ModeSchema(many=True)
+        result = modes_schema.dump(all_modes)
+        # pprint(result)
+        return modes_schema.jsonify(all_modes)
+
+
 @app.route('/modes', methods=['GET', 'POST'])
 @login_required
 def modes():
@@ -242,17 +260,19 @@ def modes():
         myModes = Mode.query.filter_by(author_id=current_user.id).all()
         return render_template('modes.html', modes=myModes)
     if request.method == 'POST':
-        modes_ids = request.form.getlist('mode_id', type=int)
-        print modes_ids
-        for id in modes_ids:
-            m = Mode.query.get(id)
-            db.session.delete(m)
-            db.session.commit()
-        return redirect(url_for('modes'))
+        if request.is_json:
+            json_data = request.get_json()
+            print json_data
+        id = json_data['mode_id']
+        print id
+        m = Mode.query.get(id)
+        db.session.delete(m)
+        db.session.commit()
+        return json.dumps({'message': 'All good'})
 
 
-@login_required
 @app.route('/modes/create', methods=['GET', 'POST'])
+@login_required
 def createmodes():
     if request.method == 'GET':
         return render_template('modesCreate.html')
@@ -262,7 +282,7 @@ def createmodes():
             print json_data
         # print current_user.id
         # print current_user.name
-        title = json_data['modeTitle']
+        title = json_data['title']
         qlambda = json_data['lambda']
         target = json_data['target']
         fwhma = json_data['fwhma']
@@ -289,24 +309,27 @@ def createmodes():
     return json.dumps({'message': 'All good'})
 
 
-@login_required
 @app.route('/modes/edit', methods=['GET', 'POST'])
+@login_required
 def editmodes():
     if request.method == 'GET':
-        id = request.args.get('id')
-        myMode = Mode.query.get(id)
-        return render_template('modesEdit.html', mode=myMode, key=id)
+        id = request.args.get('mode_id')
+        mode = Mode.query.get(id)
+        mode_schema = ModeSchema()
+        return mode_schema.jsonify(mode)
     if request.method == 'POST':
-        # print request.form
-        id = request.form['key_id']
+        if request.is_json:
+            json_data = request.get_json()
+            print json_data
+        id = json_data['mode_id']
         myMode = Mode.query.get(id)
-        myMode.title = request.form['name']
-        myMode.qlambda = request.form['lambda']
-        myMode.qtarget = request.form['target']
-        myMode.fwhma = request.form['fwhma']
-        myMode.fwhmb = request.form['fwhmb']
-        inventory = request.form['inventory']
-        old = request.form['oldinventory']
+        myMode.title = json_data['title']
+        myMode.qlambda = json_data['lambda']
+        myMode.qtarget = json_data['target']
+        myMode.fwhma = json_data['fwhma']
+        myMode.fwhmb = json_data['fwhmb']
+        inventory = json_data['inventory']
+        old = ['oldinventory']
         if old != inventory:
             # print request.form['inventory'], old
             myMode.inventory = inventory
@@ -320,11 +343,11 @@ def editmodes():
                 initial = sorted(phaselist.cheminPhases)
                 myMode.initial = initial
                 db.session.commit()
-    return redirect(url_for('modes'))
+    return json.dumps({'message': 'All good'})
 
 
-@login_required
 @app.route('/activeMode', methods=['GET', 'POST'])
+@login_required
 def active_mode():
     if request.method == 'POST':
         # dict = request.form

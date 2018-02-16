@@ -1,10 +1,11 @@
-#################
+
 #### imports ####
 #################
 
 from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_cors import CORS
@@ -25,6 +26,9 @@ login_manager.login_view = 'login'
 login_manager.init_app(app)
 app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
+ma = Marshmallow(app)
+
+
 app.logger.info('Welcome to Qanalyze')
 
 app.jinja_env.auto_reload = True

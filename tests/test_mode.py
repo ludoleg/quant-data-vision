@@ -11,7 +11,7 @@ class ModeTests(BaseTestCase):
     def test_mode(self):
         with self.client:
             response = self.client.post(
-                '/modes',
+                '/mode',
                 follow_redirects=True
             )
             self.assertEqual(response.status_code, 200)
@@ -35,8 +35,8 @@ class ModeTests(BaseTestCase):
                 data=dict(username="user1", password="user1"),
                 follow_redirects=True
             )
-            response = self.client.post(
-                '/modes',
+            response = self.client.get(
+                '/mode',
                 follow_redirects=True
             )
             self.assertEqual(response.status_code, 200)

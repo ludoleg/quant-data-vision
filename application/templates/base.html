@@ -59,10 +59,10 @@
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Settings<span class="caret"></span></a>
                         <ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-                            <li><a href="/activeMode">Change Active Mode</a></li>
-                            <li><a href="{{ url_for('setphase') }}">Set Initial Phases</a></li>
-	                    <li class="divider"></li>
-                            <li><a href="{{ url_for('modes') }}">Create/Edit Modes</a></li>
+                          <li><a href="{{ url_for('mode') }}">Modes</a></li>
+	                  <li class="divider"></li>
+                          <li><a href="/activeMode">Change Active Mode</a></li>
+                          <li><a href="{{ url_for('setphase') }}">Set Initial Phases</a></li>
                         </ul>
                     </li>
                     {% endif %}
