@@ -4,7 +4,7 @@
 <div class="container">
     <header class="page-header">
         <div class="branding">
-            <h1>Analysis Modes</h1>
+            <h3>Analysis Modes</h3>
         </div>
     </header>
     <main id="app"></main>
@@ -51,7 +51,9 @@
 
 <template id="add-mode" v-cloak>
     <div class="panel panel-default">
-        <div class="panel-heading">Add new mode</div>
+        <div class="panel-heading">
+            <router-link :to="'/'" class="btn btn-default"><span class="glyphicon glyphicon-arrow-left"></span> Back to List</router-link>
+        </div>
         <div class="panel-body">
             <form v-on:submit="createMode" class="form-horizontal" role="form">
                 <div class="form-group">
@@ -61,34 +63,34 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-lg-2 control-label" for="add-lambda">Lambda</label>
                     <div class="col-lg-4">
-                        <label class="col-lg-2 control-label" for="add-description">Lambda</label>
-                        <input class="form-control" id="add-lambda" v-model="form.lambda" required/>
+                        <input v-model="form.lambda" class="form-control" id="add-lambda" data-placement="top" data-toggle="tooltip" title="Enter 0 for automatic assignment based on target or a value in Angstrom, such as 1.79027." required/>
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-lg-2 control-label" for="add-target">Target</label>
                     <div class="col-lg-4">
-                        <label class="col-lg-2 control-label" for="add-description">Target</label>
                         <select class="form-control" v-model="form.target" name="target">
                             <option v-for="option in options.target" v-bind:value="option.value">[[ option.text ]]</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-lg-2 control-label" for="add-price">FWHMA</span></label>
                     <div class="col-lg-4">
-                        <label class="col-lg-2 control-label" for="add-price">FWHMA</span></label>
                         <input v-model="form.fwhma" data-placement="top" data-toggle="tooltip" title="Peak broadening curve slope A in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhma" name="fwhma" required/>
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-lg-2 control-label" for="add-price">FWHMB</span></label>
                     <div class="col-lg-4">
-                        <label class="col-lg-2 control-label" for="add-price">FWHMB</span></label>
                         <input v-model="form.fwhmb" data-placement="top" data-toggle="tooltip" title="Peak broadening curve offset B in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhmb" name="fwhmb" required/>
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="col-lg-2 control-label" for="add-price">Inventory</span></label>
                     <div class="col-lg-4">
-                        <label class="col-lg-2 control-label" for="add-price">Inventory</span></label>
                         <select class="form-control" v-model="form.inventory" name="inventory">
                             <option v-for="option in options.inventory" v-bind:value="option.value">[[ option.text ]]</option>
                         </select>
@@ -112,28 +114,30 @@
         <div>[[ mode.qtarget ]]</div>
         <b>Inventory:</b>
         <div>[[ mode.inventory ]]
-        <br/>
-        <router-link :to="'/'">Back to mode list</router-link>
+            <br/>
+            <router-link :to="'/'">Back to mode list</router-link>
     </section>
 </template>
 
-<template id="mode-edit">
+<template id="mode-edit" v-cloak>
     <section>
-        <h2>Edit mode</h2>
+        <h4>Edit mode</h4>
         <div class="panel panel-default">
             <div class="panel-heading">
-                <div class="panel-body">
-                    <form v-on:submit="updateMode">
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label" for="edit-name">Name</label>
-                            <div class="col-lg-4">
-                                <input class="form-control" id="edit-name" v-model="form.title" required/>
-                            </div>
+                <router-link :to="'/'" class="btn btn-default"><span class="glyphicon glyphicon-arrow-left"></span> Back to List</router-link>
+            </div>
+            <div class="panel-body">
+                <form v-on:submit="updateMode" class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label" for="edit-name">Name</label>
+                        <div class="col-lg-4">
+                            <input class="form-control" id="edit-name" v-model="form.title" required/>
                         </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label" for="">Lambda</label>
-                            <div class="col-lg-4">
-                                <input type="text" class="form-control" v-model="form.lambda" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label" for="">Lambda</label>
+                        <div class="col-lg-4">
+                            <input type="text" class="form-control" v-model="form.lambda" required />
                             </div>
                         </div>
                         <div class="form-group">
