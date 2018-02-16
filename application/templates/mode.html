@@ -50,61 +50,64 @@
 
 
 <template id="add-mode" v-cloak>
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <router-link :to="'/'" class="btn btn-default"><span class="glyphicon glyphicon-arrow-left"></span> Back to List</router-link>
+    <section>
+        <h4>Add mode</h4>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <router-link :to="'/'" class="btn btn-default"><span class="glyphicon glyphicon-arrow-left"></span> Back to List</router-link>
+            </div>
+            <div class="panel-body">
+                <form v-on:submit="createMode" class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label" for="add-name">Name</label>
+                        <div class="col-lg-4">
+                            <input v-model="form.title" class="form-control" placeholder="Mode name" type="text" id="add-name" data-placement="top" data-toggle="tooltip" title="Choose the name of your mode." autofocus required/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label" for="add-lambda">Lambda</label>
+                        <div class="col-lg-4">
+                            <input v-model="form.lambda" class="form-control" id="add-lambda" data-placement="top" data-toggle="tooltip" title="Enter 0 for automatic assignment based on target or a value in Angstrom, such as 1.79027." required/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label" for="add-target">Target</label>
+                        <div class="col-lg-4">
+                            <select class="form-control" v-model="form.target" name="target">
+                                <option v-for="option in options.target" v-bind:value="option.value">[[ option.text ]]</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label" for="add-price">FWHMA</span></label>
+                        <div class="col-lg-4">
+                            <input v-model="form.fwhma" data-placement="top" data-toggle="tooltip" title="Peak broadening curve slope A in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhma" name="fwhma" required/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label" for="add-price">FWHMB</span></label>
+                        <div class="col-lg-4">
+                            <input v-model="form.fwhmb" data-placement="top" data-toggle="tooltip" title="Peak broadening curve offset B in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhmb" name="fwhmb" required/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label" for="add-price">Inventory</span></label>
+                        <div class="col-lg-4">
+                            <select class="form-control" v-model="form.inventory" name="inventory">
+                                <option v-for="option in options.inventory" v-bind:value="option.value">[[ option.text ]]</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-offset-2 col-lg-4">
+                            <button type="submit" class="btn btn-primary">Create</button>
+                            <router-link :to="'/'" class="btn btn-default">Cancel</router-link>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="panel-body">
-            <form v-on:submit="createMode" class="form-horizontal" role="form">
-                <div class="form-group">
-                    <label class="col-lg-2 control-label" for="add-name">Name</label>
-                    <div class="col-lg-4">
-                        <input v-model="form.title" class="form-control" placeholder="Mode name" type="text" id="add-name" data-placement="top" data-toggle="tooltip" title="Choose the name of your mode." autofocus required/>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-lg-2 control-label" for="add-lambda">Lambda</label>
-                    <div class="col-lg-4">
-                        <input v-model="form.lambda" class="form-control" id="add-lambda" data-placement="top" data-toggle="tooltip" title="Enter 0 for automatic assignment based on target or a value in Angstrom, such as 1.79027." required/>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-lg-2 control-label" for="add-target">Target</label>
-                    <div class="col-lg-4">
-                        <select class="form-control" v-model="form.target" name="target">
-                            <option v-for="option in options.target" v-bind:value="option.value">[[ option.text ]]</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-lg-2 control-label" for="add-price">FWHMA</span></label>
-                    <div class="col-lg-4">
-                        <input v-model="form.fwhma" data-placement="top" data-toggle="tooltip" title="Peak broadening curve slope A in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhma" name="fwhma" required/>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-lg-2 control-label" for="add-price">FWHMB</span></label>
-                    <div class="col-lg-4">
-                        <input v-model="form.fwhmb" data-placement="top" data-toggle="tooltip" title="Peak broadening curve offset B in FWHM = A.2&#x03B8+B." type="text" class="form-control" id="fwhmb" name="fwhmb" required/>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-lg-2 control-label" for="add-price">Inventory</span></label>
-                    <div class="col-lg-4">
-                        <select class="form-control" v-model="form.inventory" name="inventory">
-                            <option v-for="option in options.inventory" v-bind:value="option.value">[[ option.text ]]</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="col-lg-offset-2 col-lg-4">
-                        <button type="submit" class="btn btn-primary">Create</button>
-                        <router-link :to="'/'" class="btn btn-default">Cancel</router-link>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+    </section>
 </template>
 
 <template id="mode">
@@ -138,41 +141,41 @@
                         <label class="col-lg-2 control-label" for="">Lambda</label>
                         <div class="col-lg-4">
                             <input type="text" class="form-control" v-model="form.lambda" required />
-                            </div>
                         </div>
-                        <div class="form-group">
-		            <label class="col-lg-2 control-label" for="">Target</label>
-                            <div class="col-lg-4">
-                                <select id="class" class="form-control" name="target" v-model="form.target">
-                                    <option v-for="option in options.target" v-bind:value="option.value">[[ option.text ]]</option>
-                                </select>
-                            </div>                    
+                    </div>
+                    <div class="form-group">
+		        <label class="col-lg-2 control-label" for="">Target</label>
+                        <div class="col-lg-4">
+                            <select id="class" class="form-control" name="target" v-model="form.target">
+                                <option v-for="option in options.target" v-bind:value="option.value">[[ option.text ]]</option>
+                            </select>
+                        </div>                    
+                    </div>
+                    <div class="form-group">
+                        <label class="col-lg-2 control-label" for="">FWHMA</label>
+                        <div class="col-lg-4">
+                            <input v-model="form.fwhma" type="text" class="form-control" name="fwhma" required />
                         </div>
-                        <div class="form-group">
-                            <label class="col-lg-2 control-label" for="">FWHMA</label>
-                            <div class="col-lg-4">
-                                <input v-model="form.fwhma" type="text" class="form-control" name="fwhma" required />
-                            </div>
+                    </div>
+                    <div class="form-group">
+		        <label class="col-lg-2 control-label" for="">FWHMB</label>
+                        <div class="col-lg-4">
+                            <input v-model="form.fwhmb" type="text" class="form-control" name="fwhmb" required />
                         </div>
-                        <div class="form-group">
-		            <label class="col-lg-2 control-label" for="">FWHMB</label>
-                            <div class="col-lg-4">
-                                <input v-model="form.fwhmb" type="text" class="form-control" name="fwhmb" required />
-                            </div>
-                        </div>
-                        <div class="form-group">
-		            <label class="col-lg-2 control-label" for="">Inventory</label>
-                            <div class="col-lg-4">
-                                <select id="class" class="form-control" v-model="form.inventory">
-                                    <option v-for="option in options.inventory" v-bind:value="option.value">[[ option.text ]]</option>
-                                </select>
-                            </div>                    
-                        </div>
-                        <button type="submit" class="btn btn-primary">Save</button>
-                        <router-link :to="'/'" class="btn btn-default">Cancel</router-link>
-                    </form>
-                </div>
+                    </div>
+                    <div class="form-group">
+		        <label class="col-lg-2 control-label" for="">Inventory</label>
+                        <div class="col-lg-4">
+                            <select id="class" class="form-control" v-model="form.inventory">
+                                <option v-for="option in options.inventory" v-bind:value="option.value">[[ option.text ]]</option>
+                            </select>
+                        </div>                    
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <router-link :to="'/'" class="btn btn-default">Cancel</router-link>
+                </form>
             </div>
+        </div>
     </section>
 </template>
 
