@@ -7,7 +7,7 @@ var List = Vue.extend({
             searchKey: ''
         };
     },
-    mounted: function() {
+    created: function() {
         axios.post('/mode')
             .then((response) => {
                 console.log(response);
