@@ -8,7 +8,7 @@ var List = Vue.extend({
         };
     },
     created: function() {
-        axios.post('/mode')
+        axios.get('/modes')
             .then((response) => {
                 console.log(response);
                 this.modes = response.data;
@@ -54,10 +54,7 @@ var Mode = Vue.extend({
     },
     mounted: function () {
         var mode = this.mode;
-        axios.get('/modes/edit', {
-            params: {
-                mode_id: this.$route.params.mode_id }
-        })
+        axios.get('/modes/'+this.$route.params.mode_id)
             .then((response) => {
                 console.log(response);
                 this.mode = response.data;
@@ -77,8 +74,8 @@ var ModeEdit = Vue.extend({
         return {
             form: {
                 title: this.$route.params.title,
-                lambda: this.$route.params.lambda,
-                target: this.$route.params.target,
+                qlambda: this.$route.params.qlambda,
+                qtarget: this.$route.params.qtarget,
                 fwhma: this.$route.params.fwhma,
                 fwhmb: this.$route.params.fwhmb,
                 inventory: this.$route.params.inventory,
@@ -86,7 +83,7 @@ var ModeEdit = Vue.extend({
                 mode_id: this.$route.params.id
             },
             options: {
-                target: [
+                qtarget: [
                     { value: 'Cu', text: "Cu"},
                     { value: 'Co', text: "Co"}
                 ],
@@ -100,7 +97,7 @@ var ModeEdit = Vue.extend({
     methods: {
         updateMode: function () {
             var mode = this.mode;
-            axios.post('/modes/edit', this.form )
+            axios.put('/modes/'+this.$route.params.id, this.form )
                 .then(function (response) {
                     console.log(response);
                 })
@@ -127,7 +124,7 @@ var ModeDelete = Vue.extend({
         deleteMode: function () {
             var mode = this.mode;
             console.log(this.mode);
-            axios.post('/modes', this.mode )
+            axios.delete('/modes/'+this.$route.params.mode_id)
                 .then(function (response) {
                     console.log(response);
                 })
@@ -138,6 +135,7 @@ var ModeDelete = Vue.extend({
         }
     }
 });
+
 var AddMode = Vue.extend({
     template: '#add-mode',
     delimiters: ['[[',']]'],
@@ -145,14 +143,14 @@ var AddMode = Vue.extend({
         return {
             form: {
                 title: '',
-                lambda: parseFloat(0),
-                target: 'Cu',
+                qlambda: parseFloat(0),
+                qtarget: 'Cu',
                 fwhma: parseFloat(0),
                 fwhmb: 0.3,
                 inventory: 'rockforming'
             },
             options: {
-                target: [
+                qtarget: [
                     { value: 'Cu', text: "Cu"},
                     { value: 'Co', text: "Co"}
                 ],
@@ -167,7 +165,7 @@ var AddMode = Vue.extend({
         createMode: function() {
             var form = this.form;
             console.log(this.form);
-            axios.post('/modes/create', this.form )
+            axios.post('/modes', this.form )
                 .then(function (response) {
                     console.log(response);
                 })
