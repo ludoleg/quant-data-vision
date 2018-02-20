@@ -46,22 +46,20 @@ class Mode(db.Model):
     initial = db.Column(db.PickleType)
     author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    def __init__(self, title, qlambda, target, fwhma, fwhmb, inventory, initial, author_id):
+    def __init__(self, title, qlambda, qtarget, fwhma, fwhmb, inventory):
         self.title = title
         self.qlambda = qlambda
-        self.qtarget = target
+        self.qtarget = qtarget
         self.fwhma = fwhma
         self.fwhmb = fwhmb
         self.inventory = inventory
-        self.initial = initial
-        self.author_id = author_id
 
     def __repr__(self):
-        return "<Mode(title='%s', qlambda='%.2f', qtarget='%s', fwhma='%.2f', fwhmb='%.2f', inventory='%s,'id='%s')>" % (self.title, self.qlambda, self.qtarget, self.fwhma, self.fwhmb, self.inventory, self.author_id)
+        return "<Mode(title='%s', qlambda='%.2f', qtarget='%s', fwhma='%.2f', fwhmb='%.2f', inventory='%s','id='%s')>" % (self.title, self.qlambda, self.qtarget, self.fwhma, self.fwhmb, self.inventory, self.author_id)
 
 
 class ModeSchema(ma.ModelSchema):
     class Meta:
         model = Mode
-        fields = ('id', 'title', 'qlambda', 'fwhma',
-                  'fwhmb', 'qtarget', 'inventory')
+        # fields = ('id', 'title', 'qlambda', 'fwhma',
+        #           'fwhmb', 'qtarget', 'inventory')

@@ -1,7 +1,7 @@
-from flask import request, render_template, url_for, session, make_response, redirect, logging, json, flash, g, jsonify
+from flask import request, render_template, url_for, session, make_response, redirect, logging, json, flash, g, jsonify, abort
 from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm
-from wtforms import FileField
+from wtforms import FileField, ValidationError
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 from flask_login import login_required, current_user
@@ -38,7 +38,7 @@ if not os.path.isdir(UPLOAD_DIR):
     os.mkdir(UPLOAD_DIR)
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/qanalyze'
-defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
+defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming')
 
 
 def before_request():
@@ -233,62 +233,89 @@ def phase():
     # return_str += 'results: {}<br />'.format(str(results))
     # return return_str
 
+# Modes CRUD
 
-@app.route('/mode', methods=['GET', 'POST'])
+
+@app.route('/modes', methods=['GET'])
 @login_required
-def mode():
+def modes():
     if request.method == 'GET':
-        return render_template('mode.html')
-    if request.method == 'POST':
         all_modes = Mode.query.filter_by(author_id=current_user.id).all()
         # mode_schema = ModeSchema()
         # many needed for multiple
         # result = mode_schema.dump(all_modes)
         modes_schema = ModeSchema(many=True)
         result = modes_schema.dump(all_modes)
+        app.logger.debug(result)
         # pprint(result)
         return modes_schema.jsonify(all_modes)
 
 
-@app.route('/modes', methods=['GET', 'POST'])
+@app.route('/modes/<int:id>', methods=['GET'])
 @login_required
-def modes():
-    if request.method == 'GET':
-        # myModes = db.session.query(Mode).filter(Mode.author_id == current_user.id)
-        # myModes = db.session.query(Mode).filter_by(author_id=current_user.id)
-        # myModes = db.session.query(Mode).all()
-        myModes = Mode.query.filter_by(author_id=current_user.id).all()
-        return render_template('modes.html', modes=myModes)
-    if request.method == 'POST':
-        if request.is_json:
-            json_data = request.get_json()
-            print json_data
-        id = json_data['mode_id']
-        print id
-        m = Mode.query.get(id)
-        db.session.delete(m)
-        db.session.commit()
-        return json.dumps({'message': 'All good'})
+def get_mode(id):
+    mode = Mode.query.get_or_404(id)
+    mode_schema = ModeSchema()
+    return mode_schema.jsonify(mode)
 
 
-@app.route('/modes/create', methods=['GET', 'POST'])
+@app.route('/modes', methods=['POST'])
 @login_required
-def createmodes():
-    if request.method == 'GET':
-        return render_template('modesCreate.html')
-    if request.method == 'POST':
-        if request.is_json:
-            json_data = request.get_json()
-            print json_data
-        # print current_user.id
-        # print current_user.name
-        title = json_data['title']
-        qlambda = json_data['lambda']
-        target = json_data['target']
-        fwhma = json_data['fwhma']
-        fwhmb = json_data['fwhmb']
-        inventory = json_data['inventory']
-        # populate initial list
+def create_mode():
+    if not request.json or not 'title' in request.json:
+        abort(400)
+    json_data = request.get_json()
+    mode_schema = ModeSchema()
+    try:
+        mode = mode_schema.load(json_data).data
+    except ValidationError as err:
+        return jsonify(err.messages), 422
+    inventory = mode.inventory
+    # populate initial list
+    if inventory == "cement":
+        initial = sorted(phaselist.cementPhases)
+    elif inventory == "pigment":
+        initial = sorted(phaselist.pigmentPhases)
+    elif inventory == "rockforming":
+        initial = sorted(phaselist.rockPhases)
+    elif inventory == "chemin":
+        initial = sorted(phaselist.cheminPhases)
+    else:
+        #            logging.critical("Can't find inventory")
+        app.logger.error("Can't find inventory")
+
+    mode.initial = initial
+    mode.author_id = current_user.id
+    db.session.add(mode)
+    db.session.commit()
+    # return redirect(url_for('modes'))
+    return mode_schema.jsonify(mode), 201
+
+
+@app.route('/modes/<int:id>', methods=['PUT'])
+@login_required
+def update_mode(id):
+    if not request.json or 'title' not in request.json:
+        abort(400)
+    myMode = Mode.query.get(id)
+    json_data = request.get_json()
+    old = json_data['oldinventory']
+    json_data.pop('oldinventory', None)
+    mode_schema = ModeSchema()
+    try:
+        mode = mode_schema.load(json_data).data
+    except ValidationError as err:
+        return jsonify(err.messages), 422
+    inventory = mode.inventory
+    myMode.title = json_data['title']
+    myMode.qlambda = json_data['qlambda']
+    myMode.qtarget = json_data['qtarget']
+    myMode.fwhma = json_data['fwhma']
+    myMode.fwhmb = json_data['fwhmb']
+    inventory = json_data['inventory']
+    if old != inventory:
+        # print request.form['inventory'], old
+        myMode.inventory = inventory
         if inventory == "cement":
             initial = sorted(phaselist.cementPhases)
         elif inventory == "pigment":
@@ -297,53 +324,29 @@ def createmodes():
             initial = sorted(phaselist.rockPhases)
         elif inventory == "chemin":
             initial = sorted(phaselist.cheminPhases)
-        else:
-            #            logging.critical("Can't find inventory")
-            app.logger.error("Can't find inventory")
-
-        mode = Mode(title, qlambda, target, fwhma,
-                    fwhmb, inventory, initial, current_user.id)
-        db.session.add(mode)
-        db.session.commit()
-        # return redirect(url_for('modes'))
-    return json.dumps({'message': 'All good'})
+            myMode.initial = initial
+    db.session.commit()
+    return mode_schema.jsonify(myMode), 201
 
 
-@app.route('/modes/edit', methods=['GET', 'POST'])
+@app.route('/modes/<int:id>', methods=['DELETE'])
+def delete_task(id):
+    m = Mode.query.get(id)
+    db.session.delete(m)
+    db.session.commit()
+    return jsonify({'result': True})
+
+# Mode Landing page
+
+
+@app.route('/mode')
 @login_required
-def editmodes():
+def mode():
     if request.method == 'GET':
-        id = request.args.get('mode_id')
-        mode = Mode.query.get(id)
-        mode_schema = ModeSchema()
-        return mode_schema.jsonify(mode)
-    if request.method == 'POST':
-        if request.is_json:
-            json_data = request.get_json()
-            print json_data
-        id = json_data['mode_id']
-        myMode = Mode.query.get(id)
-        myMode.title = json_data['title']
-        myMode.qlambda = json_data['lambda']
-        myMode.qtarget = json_data['target']
-        myMode.fwhma = json_data['fwhma']
-        myMode.fwhmb = json_data['fwhmb']
-        inventory = json_data['inventory']
-        old = ['oldinventory']
-        if old != inventory:
-            # print request.form['inventory'], old
-            myMode.inventory = inventory
-            if inventory == "cement":
-                initial = sorted(phaselist.cementPhases)
-            elif inventory == "pigment":
-                initial = sorted(phaselist.pigmentPhases)
-            elif inventory == "rockforming":
-                initial = sorted(phaselist.rockPhases)
-            elif inventory == "chemin":
-                initial = sorted(phaselist.cheminPhases)
-                myMode.initial = initial
-        db.session.commit()
-        return json.dumps({'message': 'All good'})
+        # myModes = db.session.query(Mode).filter(Mode.author_id == current_user.id)
+        # myModes = db.session.query(Mode).filter_by(author_id=current_user.id)
+        # myModes = db.session.query(Mode).all()
+        return render_template('mode.html')
 
 
 @app.route('/activeMode', methods=['GET', 'POST'])
@@ -441,7 +444,8 @@ def qxrd_worker(userData, phasearray, ar):
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -665,8 +669,7 @@ def chemin():
         xmin = min(angle)
         xmax = max(angle)
         # xmax = max(angle)
-        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
-                   :max(np.where(np.array(angle) > xmin)[0])])
+        Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])                        :max(np.where(np.array(angle) > xmin)[0])])
         offset = Imax / 2 * 3
         offsetline = [offset] * len(angle)
 
@@ -763,7 +766,8 @@ def chemin_process():
     bgpoly = BG
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0]):max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > xmin)[0])
+               :max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
@@ -890,7 +894,7 @@ def process():
 
     xmin = min(angle)
     xmax = max(angle)
-    Imax = max(diff[min(np.where(np.array(angle) > 15)[0])                    :max(np.where(np.array(angle) > xmin)[0])])
+    Imax = max(diff[min(np.where(np.array(angle) > 15)[0]):max(np.where(np.array(angle) > xmin)[0])])
     offset = Imax / 2 * 3
     offsetline = [offset] * len(angle)
 
