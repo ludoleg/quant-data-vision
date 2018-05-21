@@ -1,35 +1,31 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [dev-packages]
 
-
-
 [packages]
-
 gunicorn = "*"
-Flask = "*"
+flask = "*"
 scipy = "*"
 numpy = "*"
-Flask-Login = "*"
-Flask-Migrate = "*"
-Flask-SQLAlchemy = "*"
-Flask-Script = "*"
+flask-login = "*"
+flask-migrate = "*"
+flask-sqlalchemy = "*"
+flask-script = "*"
 "psycopg2" = "*"
-Flask-WTF = "*"
-Flask-Bcrypt = "*"
-Flask-Testing = "*"
+flask-wtf = "*"
+flask-bcrypt = "*"
+flask-testing = "*"
 coverage = "*"
-Flask-Cors = "*"
-Flask-Bootstrap = "*"
+flask-cors = "*"
+flask-bootstrap = "*"
 flask-marshmallow = "*"
 marshmallow-sqlalchemy = "*"
-
+"psycopg2-binary" = "*"
+python-dotenv = "*"
+pip = "*"
 
 [requires]
-
 python_version = "2.7"

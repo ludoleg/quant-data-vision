@@ -278,6 +278,7 @@
                   $('#result').show();
                   // console.log(response.data);
                   $("#rightValues").empty();
+                  $("#leftValues").empty();
                   graphs(response.data);
                   $.each(response.data.selected, function (i) {
                       // console.log(response.data.selected[i]);
