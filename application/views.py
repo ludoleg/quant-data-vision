@@ -62,16 +62,22 @@ def rebal(selected, inventory):
 
 def rebalance(results):
     # Get the base list
-    if session['dbname'] == 'difdata_cement.txt':
+    if 'mode' in session:
+        mode = Mode.query.get(session['mode'])
+    else:
+        mode = defaultMode
+    DBname = 'difdata_' + mode.inventory + '.txt'
+
+    if DBname == 'difdata_cement.txt':
         db = phaselist.cementPhases
-    elif session['dbname'] == 'difdata_pigment.txt':
+    elif DBname == 'difdata_pigment.txt':
         db = phaselist.pigmentPhases
-    elif session['dbname'] == 'difdata_rockforming.txt':
+    elif DBname == 'difdata_rockforming.txt':
         db = phaselist.rockPhases
-    elif session['dbname'] == 'difdata_chemin.txt':
+    elif DBname == 'difdata_chemin.txt':
         db = phaselist.cheminPhases
 
-    app.logger.debug('Rebalance: dbname % s', session['dbname'])
+    app.logger.debug('Rebalance: dbname % s', DBname)
 
     available = []
     selected = [a[0] for a in results]
@@ -389,19 +395,22 @@ def qxrd_worker(userData, phasearray, ar):
     diff = userData[1]
 
     # defaultMode = Mode('Default', 0, 'Co', 0, 0.3, 'rockforming', None, None)
-    app.logger.debug(session)
+    app.logger.warning(session)
     app.logger.warning('Length of angle array: %d', len(angle))
 
-    # Load inventory
-    DBname = session['dbname']
-    difdata = open(DBname, 'r').readlines()
-
     # Mode
-    myMode = defaultMode
+    if 'mode' in session:
+        myMode = Mode.query.get(session['mode'])
+    else:
+        myMode = defaultMode
     Lambda = myMode.qlambda
     Target = myMode.qtarget
     FWHMa = myMode.fwhma
     FWHMb = myMode.fwhmb
+
+    # Load inventory
+    DBname = 'difdata_' + myMode.inventory + '.txt'
+    difdata = open(DBname, 'r').readlines()
 
     # Boundaries check
     if(Lambda > 2.2 or Lambda == 0):
@@ -429,6 +438,8 @@ def qxrd_worker(userData, phasearray, ar):
         selectedphases.append((name, code))
 
     app.logger.warning('Autorm: %s', ar)
+    app.logger.info(InstrParams)
+    
     results, BG, Sum, mineralpatterns = qxrd.Qanalyze(userData,
                                                       difdata,
                                                       selectedphases,
@@ -483,8 +494,7 @@ def home():
         filename = secure_filename(f.filename)
         f.save(os.path.join(app.config['UPLOAD_FOLDER'],
                             filename))
-        session['filename'] = filename
-        return redirect(url_for('chart'))
+        return redirect(url_for('chart', filename=filename))
     return render_template('index.html', form=form, modeset=modeset)
 
 
@@ -497,40 +507,36 @@ def clearModeCtx():
 
 
 def loadModeCtx():
+    g.autorm = True
     if current_user.is_authenticated:
-        g.autorm = True
         if 'mode' in session:
             mode = Mode.query.get(session['mode'])
         else:
             mode = Mode.query.filter_by(author_id=current_user.id).first()
         g.selected = mode.initial
         g.mode = mode
-        session['dbname'] = 'difdata_' + mode.inventory + '.txt'
     else:
         # anonymous flow
-        inventory = defaultMode.inventory
-        session['dbname'] = 'difdata_' + inventory + '.txt'
         g.selected = phaselist.rockPhases
         g.mode = defaultMode
         # app.logger.warning("loadModeCtx session['selected']: % s", session['selected'])
 
 
-@app.route('/chart', methods=['GET', 'POST'])
-def chart():
+@app.route('/chart/<filename>', methods=['GET', 'POST'])
+def chart(filename):
     clearModeCtx()
     loadModeCtx()
 
-    app.logger.info(session)
+    # app.logger.info(session)
 
     # Load parameters for computation
-    filename = session['filename']
     XRDdata = open(os.path.join('uploads', filename), 'r')
     userData = qxrdtools.openXRD(XRDdata, filename)
     angle = userData[0]
     diff = userData[1]
 
     ava = rebal(g.selected, g.mode.inventory)
-    app.logger.warning(g.selected)
+    # app.logger.warning(g.selected)
 
     template_vars = {
         'angle': angle.tolist(),

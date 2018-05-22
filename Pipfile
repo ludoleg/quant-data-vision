@@ -26,6 +26,7 @@ marshmallow-sqlalchemy = "*"
 "psycopg2-binary" = "*"
 python-dotenv = "*"
 pip = "*"
+pytest = "*"
 
 [requires]
 python_version = "2.7"
