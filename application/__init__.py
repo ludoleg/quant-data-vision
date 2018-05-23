@@ -30,8 +30,8 @@ app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
-sentry = Sentry(app, dsn='https://167cd95842c04c86b0fce09ea3ee0346:415837e90c364637bf7f05f1c03570e2@sentry.io/1211570')
-# xsentry.captureMessage('Sentry started')
+sentry = Sentry(app, dsn='https://14d95ba8b83a4aed857d7f5912605b2e:687ec519553144b4a358e6b06b55fe2b@sentry.io/1211756')
+# sentry.captureMessage('Sentry started')
 
 app.logger.info('Welcome to Qanalyze')
 
