@@ -13,6 +13,8 @@ import os
 import logging
 import sys
 
+from raven.contrib.flask import Sentry
+
 ################
 #### config ####
 ################
@@ -28,17 +30,20 @@ app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
+sentry = Sentry(app, dsn='https://167cd95842c04c86b0fce09ea3ee0346:415837e90c364637bf7f05f1c03570e2@sentry.io/1211570')
+# xsentry.captureMessage('Sentry started')
 
 app.logger.info('Welcome to Qanalyze')
 
 app.jinja_env.auto_reload = True
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-import logging
-stream_handler = logging.StreamHandler()
-app.logger.addHandler(stream_handler)
-app.logger.setLevel(logging.INFO)
-app.logger.info('qanalyze startup')
+# import logging
+# stream_handler = logging.StreamHandler()
+# app.logger.addHandler(stream_handler)
+# app.logger.setLevel(logging.INFO)
+#app.logger.info('=== Qanalyze Startup ----')
+logging.info('=== Qanalyze Startup ----')
 
 from users.views import users_blueprint
 from views import *
