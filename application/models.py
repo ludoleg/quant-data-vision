@@ -1,6 +1,5 @@
-from application import db, bcrypt, login_manager, ma
+from application import db, bcrypt, login_manager, ma, phaselist
 from flask_login import UserMixin
-
 
 class User(UserMixin, db.Model):
 
@@ -53,6 +52,16 @@ class Mode(db.Model):
         self.fwhma = fwhma
         self.fwhmb = fwhmb
         self.inventory = inventory
+        if inventory == "cement":
+            initial = sorted(phaselist.cementPhases)
+        elif inventory == "pigment":
+            initial = sorted(phaselist.pigmentPhases)
+        elif inventory == "rockforming":
+            initial = sorted(phaselist.rockPhases)
+        elif inventory == "chemin":
+            initial = sorted(phaselist.cheminPhases)
+        self.initial = initial
+
 
     def __repr__(self):
         return "<Mode(title='%s', qlambda='%.2f', qtarget='%s', fwhma='%.2f', fwhmb='%.2f', inventory='%s','id='%s')>" % (self.title, self.qlambda, self.qtarget, self.fwhma, self.fwhmb, self.inventory, self.author_id)
