@@ -547,7 +547,8 @@ def chart(filename):
         'selectedphaselist': g.selected,
         'autorm': g.autorm
     }
-    return render_template('chart.html', **template_vars)
+    # return render_template('chart.html', **template_vars)
+    return render_template('vuecrud.html', **template_vars)
 
 
 @app.route('/compute', methods=['GET', 'POST'])
@@ -693,7 +694,7 @@ def chemin():
 
         session['filename'] = filename
 
-        cheminMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin', None, None)
+        cheminMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin')
 
         template_vars = {
             'phaselist': results,
@@ -789,7 +790,7 @@ def chemin_process():
 
     session['results'] = results
 
-    cheminMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin', None, None)
+    cheminMode = Mode('DefaultChemin', 0, 'Co', 0, 0, 'chemin')
 
     template_vars = {
         'phaselist': results,
