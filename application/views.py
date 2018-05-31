@@ -547,8 +547,7 @@ def chart(filename):
         'selectedphaselist': g.selected,
         'autorm': g.autorm
     }
-    # return render_template('chart.html', **template_vars)
-    return render_template('vuecrud.html', **template_vars)
+    return render_template('chart.html', **template_vars)
 
 
 @app.route('/compute', methods=['GET', 'POST'])
