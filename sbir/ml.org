@@ -1,0 +1,25 @@
+* Machine Learning Pipeline
+
+** Procedure
+
+1. generate zillions of synthetic samples from the theory (Bob's generator)
+1. add dispersion and random noise
+1. create a data set of synthetic and real samples
+1. train a classifier -- the fraud detector -- to distinguish real from synthetic samples
+1. adjust the sample generator to defeat as much as possible the fraud detector
+1. train a classifier on the synthetic samples that defeat the fraud
+   detector. The objective of the classifier is to recognize the phases
+
+** Phase I
+
+1. use the existing QAnalyse data base as a collection of platonic samples
+1. mix synthetic samples and add realistic noise
+1. train a classifier to identify the phases contained in the samples
+1. use QAnalyse to determine the phase proportions
+1. test on real data to evaluate performance
+
+** Phase II
+
+1. train the fraud detector and the sample generator (this is the harder part fo the project)
+1. retrain the phase classifier
+1. evaluate on real data
